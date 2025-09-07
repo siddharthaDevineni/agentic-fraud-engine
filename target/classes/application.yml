@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: agentic-fraud-engine
+
+  # Spring AI Configuration
+  ai:
+    openai:
+      api-key: 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
+      chat:
+        model: gpt-4o
+        temperature: 0.1
+      embedding:
+        model: text-embedding-3-large
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: fraud-engine
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.agenticfraud.engine.models
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+# Actuator for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.agenticfraud: DEBUG
+    org.springframework.ai: DEBUG
+    org.apache.kafka: INFO
