@@ -2,6 +2,7 @@ package com.agenticfraud.engine.agents;
 
 import com.agenticfraud.engine.models.AgentInsight;
 import com.agenticfraud.engine.models.Transaction;
+import com.agenticfraud.engine.utils.AgenticFraudUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
@@ -28,9 +29,9 @@ public abstract class AbstractFraudAgent implements FraudAgent {
             String prompt = buildAnalysisPrompt(transaction);
             String analysis = chatModel.call(prompt);
 
-            double riskScore = extractRiskScore(analysis);
-            String reasoning = extractReasoning(analysis);
-            String recommendation = extractRecommendation(analysis);
+            double riskScore = AgenticFraudUtils.extractRiskScore(analysis);
+            String reasoning = AgenticFraudUtils.extractReasoning(analysis);
+            String recommendation = AgenticFraudUtils.extractRecommendation(analysis);
 
             AgentInsight insight = AgentInsight.create(
                     getSpecialization(),
@@ -58,8 +59,8 @@ public abstract class AbstractFraudAgent implements FraudAgent {
             String collaborationPrompt = buildCollaborationPrompt(transaction, question, context);
             String response = chatModel.call(collaborationPrompt);
 
-            double riskScore = extractRiskScore(response);
-            String reasoning = extractReasoning(response);
+            double riskScore = AgenticFraudUtils.extractRiskScore(response);
+            String reasoning = AgenticFraudUtils.extractReasoning(response);
 
             return AgentInsight.create(
                     getSpecialization(),
@@ -109,49 +110,11 @@ public abstract class AbstractFraudAgent implements FraudAgent {
                         RISK_SCORE: [0.0-1.0]
                         REASONING: [Your detailed analysis]
                         RECOMMENDATION: [What action to take]
-                        """, getSpecialization(), question, transaction.toAnalysisText(),
-                context.length > 0 ? String.valueOf(context[0]) : "None");
-    }
-
-    protected double extractRiskScore(String analysis) {
-        try {
-            // Look for RISK_SCORE: pattern
-            if (analysis.contains("RISK_SCORE:")) {
-                String scorePart = analysis.substring(analysis.indexOf("RISK_SCORE:") + 11);
-                String scoreStr = scorePart.split("\\n")[0].trim();
-                return Double.parseDouble(scoreStr);
-            }
-
-            // Fallback: analyze sentiment and keywords for risk estimation
-            String lower = analysis.toLowerCase();
-            if (lower.contains("high risk") || lower.contains("fraudulent") || lower.contains("suspicious")) {
-                return 0.8;
-            } else if (lower.contains("medium risk") || lower.contains("unusual") || lower.contains("concerning")) {
-                return 0.6;
-            } else if (lower.contains("low risk") || lower.contains("normal") || lower.contains("legitimate")) {
-                return 0.2;
-            }
-
-            return 0.5; // Default moderate risk
-        } catch (Exception e) {
-            logger.warn("Could not extract risk score from analysis: {}", e.getMessage());
-            return 0.5;
-        }
-    }
-
-    protected String extractReasoning(String analysis) {
-        if (analysis.contains("REASONING:")) {
-            String reasoningPart = analysis.substring(analysis.indexOf("REASONING:") + 10);
-            return reasoningPart.split("RECOMMENDATION:")[0].trim();
-        }
-        return analysis.length() > 200 ? analysis.substring(0, 200) + "..." : analysis;
-    }
-
-    protected String extractRecommendation(String analysis) {
-        if (analysis.contains("RECOMMENDATION:")) {
-            return analysis.substring(analysis.indexOf("RECOMMENDATION:") + 15).trim();
-        }
-        return "Standard fraud review recommended";
+                        """, getSpecialization(),
+                question,
+                transaction.toAnalysisText(),
+                context.length > 0 ? String.valueOf(context[0]) : "None"
+        );
     }
 
     private AgentInsight createErrorInsight(Transaction transaction, Exception e) {
@@ -164,4 +127,6 @@ public abstract class AbstractFraudAgent implements FraudAgent {
                 "Manual review required due to analysis error"
         );
     }
+
+
 }

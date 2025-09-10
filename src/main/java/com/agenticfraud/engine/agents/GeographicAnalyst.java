@@ -5,9 +5,9 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GeographicalAnalyst extends AbstractFraudAgent {
+public class GeographicAnalyst extends AbstractFraudAgent {
 
-    protected GeographicalAnalyst(ChatModel chatModel) {
+    protected GeographicAnalyst(ChatModel chatModel) {
         super(chatModel);
     }
 
