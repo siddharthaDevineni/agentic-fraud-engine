@@ -48,7 +48,7 @@ public class AgentOrchestrator {
         this.temporalAnalyst = temporalAnalyst;
         this.chatModel = chatModel;
 
-        logger.info("🎭 Agent Orchestrator initialized with 5 fraud investigators");
+        logger.info("Agent Orchestrator initialized with 5 fraud investigators");
     }
 
     /**
