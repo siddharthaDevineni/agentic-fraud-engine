@@ -1,2 +1,13 @@
+com/agenticfraud/engine/utils/AgenticFraudUtils.class
 com/agenticfraud/engine/AgenticFraudEngineApplication.class
+com/agenticfraud/engine/agents/AbstractFraudAgent.class
 com/agenticfraud/engine/models/Transaction.class
+com/agenticfraud/engine/agents/FraudAgent.class
+com/agenticfraud/engine/services/AgentOrchestrator.class
+com/agenticfraud/engine/agents/GeographicAnalyst.class
+com/agenticfraud/engine/agents/RiskAssessor.class
+com/agenticfraud/engine/agents/TemporalAnalyst.class
+com/agenticfraud/engine/models/AgentInsight.class
+com/agenticfraud/engine/models/FraudDecision.class
+com/agenticfraud/engine/agents/BehaviorAnalyst.class
+com/agenticfraud/engine/agents/PatternDetector.class

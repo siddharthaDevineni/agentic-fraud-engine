@@ -1,2 +1,13 @@
 /home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/AgenticFraudEngineApplication.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/agents/AbstractFraudAgent.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/agents/BehaviorAnalyst.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/agents/FraudAgent.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/agents/GeographicAnalyst.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/agents/PatternDetector.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/agents/RiskAssessor.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/agents/TemporalAnalyst.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/models/AgentInsight.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/models/FraudDecision.java
 /home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/models/Transaction.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/services/AgentOrchestrator.java
+/home/sidna/projects/agentic-fraud-detection/agentic-fraud-engine/src/main/java/com/agenticfraud/engine/utils/AgenticFraudUtils.java
