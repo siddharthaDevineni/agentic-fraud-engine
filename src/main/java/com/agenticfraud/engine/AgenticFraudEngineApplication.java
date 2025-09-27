@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class AgenticFraudEngineApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(AgenticFraudEngineApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(AgenticFraudEngineApplication.class, args);
+  }
 }
