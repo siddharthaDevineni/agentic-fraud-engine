@@ -48,6 +48,9 @@ public class AgentCoordinator {
     logger.info("Agent Coordinator initialized with 5 fraud investigators");
   }
 
+    /**
+     * INTELLIGENT STREAMING: AI agents enhanced with real-time context
+     */
   public FraudDecision investigateTransactionWithStreamingContext(
       Transaction transaction, StreamingContext streamingContext) {
 
@@ -60,7 +63,7 @@ public class AgentCoordinator {
 
     try {
       // Enhanced agent prompts with streaming context
-      List<CompletableFuture<AgentInsight>> agentTasks =
+      List<CompletableFuture<AgentInsight>> intelligentAgentTasks =
           List.of(
               CompletableFuture.supplyAsync(
                   () -> {
@@ -78,6 +81,7 @@ public class AgentCoordinator {
                     return behaviorAnalyst.collaborate(transaction, contextPrompt);
                   },
                   agentExecutor),
+
               CompletableFuture.supplyAsync(
                   () -> {
                     String velocityPrompt =
@@ -97,6 +101,7 @@ public class AgentCoordinator {
                     return patternDetector.collaborate(transaction, velocityPrompt);
                   },
                   agentExecutor),
+
               CompletableFuture.supplyAsync(
                   () -> {
                     String profilePrompt =
@@ -116,11 +121,13 @@ public class AgentCoordinator {
                     return riskAssessor.collaborate(transaction, profilePrompt);
                   },
                   agentExecutor),
+
               CompletableFuture.supplyAsync(
                   () -> {
                     return geographicAnalyst.collaborate(transaction, "");
                   },
                   agentExecutor),
+
               CompletableFuture.supplyAsync(
                   () -> {
                     return temporalAnalyst.analyze(transaction);
@@ -128,26 +135,26 @@ public class AgentCoordinator {
                   agentExecutor));
 
       // Collect insights from all agents
-      List<AgentInsight> agentInsights = agentTasks.stream().map(CompletableFuture::join).toList();
+      List<AgentInsight> intelligentAgentInsights = intelligentAgentTasks.stream().map(CompletableFuture::join).toList();
 
       FraudDecision decision =
-          synthesizeFinalDecision(transaction, agentInsights, new ArrayList<>());
+          synthesizeIntelligentDecision(transaction, streamingContext, intelligentAgentInsights);
 
       long duration = System.currentTimeMillis() - startTime;
       logger.info(
-          "Contextual investigation completed in {}ms: {} (confidence: {:.1f}%)",
+          "Intelligent investigation completed in {}ms: {} (confidence: {:.1f}%)",
           duration,
           decision.isFraudulent() ? "FRAUD" : "LEGITIMATE",
           decision.confidenceScore() * 100);
 
       return decision;
     } catch (Exception e) {
-      logger.error("Error during contextual investigation: {}", e.getMessage(), e);
+      logger.error("Error during intelligent contextual investigation: {}", e.getMessage(), e);
       return createErrorDecision(transaction, e);
     }
   }
 
-  private FraudDecision synthesizeFinalDecision(
+  private FraudDecision synthesizeIntelligentDecision(
       Transaction transaction, StreamingContext context, List<AgentInsight> insights) {
 
     // Enhanced decision synthesis using streaming context
@@ -157,14 +164,14 @@ public class AgentCoordinator {
 
     if (context.hasHighVelocity()) {
       contextBonus += 0.2; // High velocity increases risk
-      logger.debug("Velocity context: +0.2 risk (high velocity detected)");
+      logger.debug("Velocity intelligence: +0.2 risk (high velocity detected)");
     }
 
     if (context.customerProfile() != null) {
       CustomerProfile profile = context.customerProfile();
       if (profile.isAmountUnusual(transaction.amount())) {
         contextBonus += 0.15;
-        logger.debug("Customer profile: +0.15 risk (amount unusual)");
+        logger.debug("Customer profile intelligence: +0.15 risk (amount unusual)");
       }
     }
 
@@ -236,7 +243,7 @@ public class AgentCoordinator {
 
       // Phase 3: Consensus Decision (synthesize all insights into the final decision)
       FraudDecision finalDecision =
-          synthesizeFinalDecision(transaction, individualInsights, collaborativeInsights);
+          synthesizeIntelligentDecision(transaction, individualInsights, collaborativeInsights);
 
       long duration = System.currentTimeMillis() - startTime;
       logger.info(
