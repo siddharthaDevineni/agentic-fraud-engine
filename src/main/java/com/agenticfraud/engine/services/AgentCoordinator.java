@@ -45,306 +45,446 @@ public class AgentCoordinator {
     this.temporalAnalyst = temporalAnalyst;
     this.chatModel = chatModel;
 
-    logger.info("Agent Coordinator initialized with 5 fraud investigators");
+    logger.info("Intelligent Streaming Agent Coordinator initialized - 5 AI investigators ready");
   }
 
-    /**
-     * INTELLIGENT STREAMING: AI agents enhanced with real-time context
-     */
-  public FraudDecision investigateTransactionWithStreamingContext(
+  /**
+   * INTELLIGENT STREAMING ANALYSIS: The core method that combines Kafka streaming context with AI
+   *
+   * <p>Every transaction analysis uses real-time streaming context to make AI smarter. This method
+   * is called from FraudDetectionController
+   *
+   * @param transaction trx
+   * @param streamingContext streaming context
+   * @return FraudDecision
+   */
+  public FraudDecision investigateTransaction(
       Transaction transaction, StreamingContext streamingContext) {
 
     logger.info(
-        "Starting investigation for transaction {} with context: {}",
+        "Starting intelligent streaming investigation for {} with context: {}",
         transaction.transactionId(),
         streamingContext.getAIContext());
 
     long startTime = System.currentTimeMillis();
 
     try {
-      // Enhanced agent prompts with streaming context
-      List<CompletableFuture<AgentInsight>> intelligentAgentTasks =
-          List.of(
-              CompletableFuture.supplyAsync(
-                  () -> {
-                    String contextPrompt =
-                        String.format(
-                            """
-                                STREAMING CONTEXT: %s
+      // Phase 1: Streaming-Enhanced Parallel Analysis
+      List<AgentInsight> streamingIntelligentInsights =
+          conductStreamingIntelligentAnalysis(transaction, streamingContext);
 
-                                As a behavior analyst, analyze this transaction considering the real-time context:
-                                %s
-
-                                Focus on how the streaming context affects behavioral analysis.
-                                """,
-                            streamingContext.getAIContext(), transaction.toAnalysisText());
-                    return behaviorAnalyst.collaborate(transaction, contextPrompt);
-                  },
-                  agentExecutor),
-
-              CompletableFuture.supplyAsync(
-                  () -> {
-                    String velocityPrompt =
-                        String.format(
-                            """
-                                        VELOCITY CONTEXT: %s
-
-                                        As a pattern detector, analyze if this transaction fits rapid-fire attack patterns:
-                                        %s
-
-                                        Use the velocity context to identify automated attacks.
-                                """,
-                            streamingContext.hasHighVelocity()
-                                ? "HIGH VELOCITY DETECTED"
-                                : "Normal velocity",
-                            transaction.toAnalysisText());
-                    return patternDetector.collaborate(transaction, velocityPrompt);
-                  },
-                  agentExecutor),
-
-              CompletableFuture.supplyAsync(
-                  () -> {
-                    String profilePrompt =
-                        String.format(
-                            """
-                                CUSTOMER CONTEXT: %s
-
-                                As a risk assessor, analyze this transaction against customer baseline:
-                                %s
-
-                                Use customer profile data from streaming joins to assess risk.
-                                """,
-                            streamingContext.customerProfile() != null
-                                ? "Customer profile available"
-                                : "Limited customer data",
-                            transaction.toAnalysisText());
-                    return riskAssessor.collaborate(transaction, profilePrompt);
-                  },
-                  agentExecutor),
-
-              CompletableFuture.supplyAsync(
-                  () -> {
-                    return geographicAnalyst.collaborate(transaction, "");
-                  },
-                  agentExecutor),
-
-              CompletableFuture.supplyAsync(
-                  () -> {
-                    return temporalAnalyst.analyze(transaction);
-                  },
-                  agentExecutor));
-
-      // Collect insights from all agents
-      List<AgentInsight> intelligentAgentInsights = intelligentAgentTasks.stream().map(CompletableFuture::join).toList();
-
-      FraudDecision decision =
-          synthesizeIntelligentDecision(transaction, streamingContext, intelligentAgentInsights);
-
-      long duration = System.currentTimeMillis() - startTime;
-      logger.info(
-          "Intelligent investigation completed in {}ms: {} (confidence: {:.1f}%)",
-          duration,
-          decision.isFraudulent() ? "FRAUD" : "LEGITIMATE",
-          decision.confidenceScore() * 100);
-
-      return decision;
-    } catch (Exception e) {
-      logger.error("Error during intelligent contextual investigation: {}", e.getMessage(), e);
-      return createErrorDecision(transaction, e);
-    }
-  }
-
-  private FraudDecision synthesizeIntelligentDecision(
-      Transaction transaction, StreamingContext context, List<AgentInsight> insights) {
-
-    // Enhanced decision synthesis using streaming context
-    double baseRiskScore = calculateWeightedRiskScore(insights);
-
-    double contextBonus = 0.0;
-
-    if (context.hasHighVelocity()) {
-      contextBonus += 0.2; // High velocity increases risk
-      logger.debug("Velocity intelligence: +0.2 risk (high velocity detected)");
-    }
-
-    if (context.customerProfile() != null) {
-      CustomerProfile profile = context.customerProfile();
-      if (profile.isAmountUnusual(transaction.amount())) {
-        contextBonus += 0.15;
-        logger.debug("Customer profile intelligence: +0.15 risk (amount unusual)");
-      }
-    }
-
-    double finalRiskScore = Math.min(1.0, baseRiskScore + contextBonus);
-    boolean isFraudulent = finalRiskScore >= 0.6;
-    double confidence = calculateConfidence(insights, isFraudulent);
-
-    String explanation =
-        generateContextualExplanation(transaction, context, insights, finalRiskScore);
-
-    return isFraudulent
-        ? FraudDecision.fraudulent(
-            transaction.transactionId(),
-            confidence,
-            "AI agents with streaming context detected fraud",
-            explanation,
-            insights)
-        : FraudDecision.legitimate(transaction.transactionId(), confidence, insights);
-  }
-
-  private String generateContextualExplanation(
-      Transaction transaction,
-      StreamingContext context,
-      List<AgentInsight> insights,
-      double finalRiskScore) {
-
-    StringBuilder explanation = new StringBuilder();
-    explanation.append("AI agents analyzed this transaction with real-time streaming context:\n\n");
-
-    explanation.append("STREAMING CONTEXT: \n");
-    explanation.append("- ").append(context.getAIContext()).append("\n\n");
-
-    explanation.append("AI AGENT ANALYSIS: \n");
-    for (AgentInsight insight : insights) {
-      explanation
-          .append("- ")
-          .append(insight.agentName())
-          .append(": ")
-          .append(insight.reasoning())
-          .append("\n");
-    }
-
-    explanation
-        .append("\nFinal risk score: ")
-        .append(String.format("%.1f%%", finalRiskScore * 100))
-        .append("\n");
-
-    return explanation.toString();
-  }
-
-  /**
-   * Main method to coordinate complete fraud analysis
-   *
-   * @param transaction trx
-   * @return FraudDecision
-   */
-  public FraudDecision investigateTransaction(Transaction transaction) {
-    logger.info("Starting multi-agent investigation for Trx: {}", transaction.transactionId());
-
-    long startTime = System.currentTimeMillis();
-
-    try {
-      // Phase 1: Parallel Individual Analysis (all agents analyze simultaneously)
-      List<AgentInsight> individualInsights = conductParallelAnalysis(transaction);
-
-      // Phase 2: Agent collaboration (agents debate and discuss findings)
+      // Phase 2: Agent Collaboration (enhanced with streaming context)
       List<AgentInsight> collaborativeInsights =
-          facilitateAgentCollaboration(transaction, individualInsights);
+          facilitateStreamingCollaboration(
+              transaction, streamingContext, streamingIntelligentInsights);
 
-      // Phase 3: Consensus Decision (synthesize all insights into the final decision)
+      //  Phase 3: Intelligent Decision Synthesis
       FraudDecision finalDecision =
-          synthesizeIntelligentDecision(transaction, individualInsights, collaborativeInsights);
+          synthesizeStreamingIntelligentDecision(
+              transaction, streamingContext, streamingIntelligentInsights, collaborativeInsights);
 
       long duration = System.currentTimeMillis() - startTime;
       logger.info(
-          "Investigation completed in {}ms: {} (confidence: {})",
+          "Intelligent streaming investigation completed in {}ms: {} (confidence: {:.1f}%)",
           duration,
           finalDecision.isFraudulent() ? "FRAUD DETECTED" : "LEGITIMATE",
-          finalDecision.confidenceScore());
+          finalDecision.confidenceScore() * 100);
 
       return finalDecision;
+
     } catch (Exception e) {
-      logger.error("Error during investigation: {}", e.getMessage(), e);
+      logger.error("Error in intelligent streaming investigation: {}", e.getMessage(), e);
       return createErrorDecision(transaction, e);
     }
   }
 
   /**
-   * Phase 1: All agents analyze the transaction in parallel This speeds up analysis while each
-   * agent focuses on their specialty
+   * Phase 1: All agents analyze the transaction with streaming intelligence in parallel. This
+   * speeds up analysis while each agent focuses on their specialty
    *
    * @param transaction trx
+   * @param streamingContext streaming context
    * @return List<AgentInsight>
    */
-  private List<AgentInsight> conductParallelAnalysis(Transaction transaction) {
+  private List<AgentInsight> conductStreamingIntelligentAnalysis(
+      Transaction transaction, StreamingContext streamingContext) {
 
-    logger.debug("Phase 1: Launching parallel agent analysis");
+    logger.debug("Phase 1: Launching streaming-intelligent parallel agent analysis");
 
-    // Create async tasks for each agent
-    List<CompletableFuture<AgentInsight>> agentTasks =
+    // Create async tasks for each agent - Enhanced agent prompts with streaming intelligence
+    List<CompletableFuture<AgentInsight>> intelligentAgentTasks =
         List.of(
+            // Behavior Analyst with Velocity Intelligence
             CompletableFuture.supplyAsync(
                 () -> {
-                  logger.debug("BehaviorAnalyst starting analysis");
-                  return behaviorAnalyst.analyze(transaction);
+                  String velocityContext =
+                      streamingContext.hasHighVelocity()
+                          ? String.format(
+                              "HIGH VELOCITY ALERT: %d transactions detected",
+                              streamingContext.recentTransactionsCount())
+                          : "Normal transaction velocity";
+
+                  String contextPrompt =
+                      String.format(
+                          """
+                            STREAMING INTELLIGENCE: %s
+
+                            As a behavior analyst, analyze this transaction with real-time velocity context:
+                            %s
+
+                            Focus: How does the streaming velocity pattern affect behavioral risk assessment?
+                            """,
+                          velocityContext, transaction.toAnalysisText());
+                  return behaviorAnalyst.collaborate(transaction, contextPrompt);
                 },
                 agentExecutor),
+
+            // Pattern Detector with Attack Vector Intelligence
             CompletableFuture.supplyAsync(
                 () -> {
-                  logger.debug("PatternDetector starting analysis");
-                  return patternDetector.analyze(transaction);
+                  String attackContext =
+                      streamingContext.hasHighVelocity()
+                          ? "RAPID-FIRE ATTACK PATTERN DETECTED - Analyze for card testing or credential stuffing"
+                          : "Single transaction pattern - Analyze for standalone fraud indicators";
+
+                  String velocityPrompt =
+                      String.format(
+                          """
+                                    ATTACK VECTOR INTELLIGENCE: %s
+
+                                    As a pattern detector, analyze attack patterns with streaming context:
+                                    %s
+
+                                    Focus: Does the velocity pattern match known automated attack vectors?
+                                    """,
+                          attackContext, transaction.toAnalysisText());
+                  return patternDetector.collaborate(transaction, velocityPrompt);
                 },
                 agentExecutor),
+            // Risk Assessor with Customer Profile Intelligence
             CompletableFuture.supplyAsync(
                 () -> {
-                  logger.debug("RiskAssessor starting analysis");
-                  return riskAssessor.analyze(transaction);
+                  String profileContext =
+                      streamingContext.customerProfile() != null
+                          ? String.format(
+                              "Customer baseline available: $%.0f avg, %s risk level",
+                              streamingContext.customerProfile().averageTransactionAmount(),
+                              streamingContext.customerProfile().riskLevel())
+                          : "Limited customer profile data - using transaction-level analysis";
+
+                  String profilePrompt =
+                      String.format(
+                          """
+                                    CUSTOMER PROFILE INTELLIGENCE: %s
+
+                                    As a risk assessor, analyze risk with streaming customer context:
+                                    %s
+
+                                    Focus: How does this transaction compare to real-time customer behavioral baseline?
+                                    """,
+                          profileContext, transaction.toAnalysisText());
+                  return riskAssessor.collaborate(transaction, profilePrompt);
                 },
                 agentExecutor),
+            // Geographic Analyst with Location Intelligence
             CompletableFuture.supplyAsync(
                 () -> {
-                  logger.debug("GeographicAnalyst starting analysis");
-                  return geographicAnalyst.analyze(transaction);
+                  String locationPrompt =
+                      String.format(
+                          """
+                                    STREAMING CONTEXT: %s
+
+                                    As a geographic analyst, analyze location risk with streaming intelligence:
+                                    %s
+
+                                    Focus: Geographic risk factors enhanced by real-time context.
+                                    """,
+                          streamingContext.getAIContext(), transaction.toAnalysisText());
+                  return geographicAnalyst.collaborate(transaction, locationPrompt);
                 },
                 agentExecutor),
+            // Temporal Analyst with Timing Intelligence
             CompletableFuture.supplyAsync(
                 () -> {
-                  logger.debug("TemporalAnalyst starting analysis");
-                  return temporalAnalyst.analyze(transaction);
+                  String timingPrompt =
+                      String.format(
+                          """
+                                    TEMPORAL INTELLIGENCE: %s
+
+                                    As a temporal analyst, analyze timing patterns with streaming context:
+                                    %s
+
+                                    Focus: How do timing patterns correlate with streaming velocity data?
+                                    """,
+                          streamingContext.hasHighVelocity()
+                              ? "High-frequency timing detected"
+                              : "Standard timing analysis",
+                          transaction.toAnalysisText());
+                  return temporalAnalyst.collaborate(transaction, timingPrompt);
                 },
                 agentExecutor));
 
-    // wait for all agents to complete and collect results
-    List<AgentInsight> insights = agentTasks.stream().map(CompletableFuture::join).toList();
+    // wait for all agents to complete and collect results of streaming-intelligent insights
+    List<AgentInsight> insights =
+        intelligentAgentTasks.stream().map(CompletableFuture::join).toList();
 
-    logger.info("Phase 1 Complete: {} agents provided insights", insights.size());
-    logAgentSummary(insights);
+    logger.info(
+        "Phase 1 Completed: {} agents provided streaming-enhanced insights", insights.size());
+    logAgentSummary(insights, streamingContext);
 
     return insights;
   }
 
   /**
-   * Agents collaborate and debate their findings This is where agents challenge each other and
-   * refine their analysis
+   * Phase 2: Agent collaboration enhanced with streaming context. Agents collaborate and debate
+   * their findings. This is where agents challenge each other and refine their analysis
    */
-  private List<AgentInsight> facilitateAgentCollaboration(
-      Transaction transaction, List<AgentInsight> individualInsights) {
+  private List<AgentInsight> facilitateStreamingCollaboration(
+      Transaction transaction,
+      StreamingContext streamingContext,
+      List<AgentInsight> individualInsights) {
 
-    logger.debug("Phase 2: Facilitating agent collaboration");
+    logger.debug("Phase 2: Facilitating streaming-enhanced agent collaboration");
 
     List<AgentInsight> collaborativeInsights = new ArrayList<>();
 
-    // Check if there's a disagreement between agents that warrants discussion
-    if (requiresCollaboration(individualInsights)) {
-      logger.info("Agents have conflicting views - initiating collaboration");
+    // Check if streaming context warrants additional collaboration
+    if (requiresStreamingCollaboration(individualInsights, streamingContext)) {
+      logger.info("Streaming context triggers enhanced agent collaboration");
 
-      // High-risk agents challenge low-risk agents
-      collaborativeInsights.addAll(facilitateHighRiskChallenge(transaction, individualInsights));
+      // High-velocity collaboration
+      if (streamingContext.hasHighVelocity()) {
+        collaborativeInsights.addAll(
+            facilitateVelocityCollaboration(transaction, streamingContext, individualInsights));
+      }
 
-      // Geographic and temporal agents cross-validate
-      collaborativeInsights.addAll(facilitateCrossValidation(transaction, individualInsights));
+      // Customer profile collaboration
+      if (streamingContext.customerProfile() != null) {
+        collaborativeInsights.addAll(
+            facilitateCustomerProfileCollaboration(
+                transaction, streamingContext, individualInsights));
+      }
 
-      // Final consensus building
-      collaborativeInsights.add(buildAgentConsensus(transaction, individualInsights));
+      // Final streaming consensus
+      collaborativeInsights.add(
+          buildStreamingConsensus(transaction, streamingContext, individualInsights));
 
     } else {
-      logger.info("Agents are in agreement - minimal collaboration needed");
-
-      // Still do lightweight collaboration for confirmation
-      collaborativeInsights.add(buildAgentConsensus(transaction, individualInsights));
+      logger.info("Standard collaboration sufficient for this streaming context");
+      collaborativeInsights.add(
+          buildStreamingConsensus(transaction, streamingContext, individualInsights));
     }
 
     return collaborativeInsights;
+  }
+
+  // ================================
+  //  INTELLIGENT DECISION SYNTHESIS
+  // ================================
+
+  /**
+   * Phase 3: Intelligent Decision Synthesis Final decision synthesis using streaming intelligence
+   *
+   * @param transaction trx
+   * @param context streaming context
+   * @param collaborativeInsights list of individual AgentInsights
+   * @param streamingIntelligentInsights list of collaborated AgentInsights
+   */
+  private FraudDecision synthesizeStreamingIntelligentDecision(
+      Transaction transaction,
+      StreamingContext context,
+      List<AgentInsight> streamingIntelligentInsights,
+      List<AgentInsight> collaborativeInsights) {
+
+    // Combine all insights - streamingIntelligentInsights and collaborativeInsights
+    List<AgentInsight> allInsights = new ArrayList<>();
+    allInsights.addAll(streamingIntelligentInsights);
+    allInsights.addAll(collaborativeInsights);
+
+    // Enhanced decision synthesis using streaming intelligence
+    double baseRiskScore = calculateWeightedRiskScore(allInsights);
+
+    // Apply streaming intelligence multipliers
+    double streamingIntelligenceBonus = calculateStreamingIntelligenceBonus(transaction, context);
+
+    double finalRiskScore = Math.min(1.0, baseRiskScore + streamingIntelligenceBonus);
+    boolean isFraudulent = finalRiskScore >= 0.6;
+    double confidence = calculateStreamingConfidence(allInsights, isFraudulent, context);
+
+    String explanation =
+        generateStreamingIntelligentExplanation(transaction, context, allInsights, finalRiskScore);
+
+    logger.info(
+        " Streaming intelligence applied: Base={:.2f}, Bonus={:.2f}, Final={:.2f}",
+        baseRiskScore,
+        streamingIntelligenceBonus,
+        finalRiskScore);
+
+    return isFraudulent
+        ? FraudDecision.fraudulent(
+            transaction.transactionId(),
+            confidence,
+            "AI agents with streaming intelligence detected fraud",
+            explanation,
+            allInsights)
+        : FraudDecision.legitimate(transaction.transactionId(), confidence, allInsights);
+  }
+
+  // ================================
+  //  STREAMING INTELLIGENCE CALCULATIONS
+  // ================================
+
+  private double calculateStreamingIntelligenceBonus(
+      Transaction transaction, StreamingContext context) {
+    double bonus = 0.0;
+
+    // Velocity intelligence bonus
+    if (context.hasHighVelocity()) {
+      bonus += 0.25; // High velocity significantly increases risk
+      logger.debug("Velocity intelligence: +0.25 risk (high velocity detected)");
+    }
+
+    // Customer profile intelligence bonus
+    if (context.customerProfile() != null) {
+      CustomerProfile profile = context.customerProfile();
+
+      if (profile.isAmountUnusual(transaction.amount())) {
+        bonus += 0.20; // Unusual amount for customer
+        logger.debug("Profile intelligence: +0.20 risk (unusual amount for customer)");
+      }
+
+      if ("HIGH".equals(profile.riskLevel())) {
+        bonus += 0.10; // High-risk customer
+        logger.debug("Profile intelligence: +0.10 risk (high-risk customer)");
+      }
+    }
+
+    return bonus;
+  }
+
+  private double calculateStreamingConfidence(
+      List<AgentInsight> insights, boolean isFraudulent, StreamingContext context) {
+    double baseConfidence = calculateConfidence(insights, isFraudulent);
+
+    // Streaming context increases confidence
+    double contextBonus = 0.0;
+
+    if (context.hasHighVelocity()) {
+      contextBonus += 0.1; // High velocity increases confidence
+    }
+
+    if (context.customerProfile() != null) {
+      contextBonus += 0.1; // Customer profile increases confidence
+    }
+
+    return Math.min(1.0, baseConfidence + contextBonus);
+  }
+
+  // ================================
+  //  STREAMING EXPLANATION GENERATOR
+  // ================================
+
+  private String generateStreamingIntelligentExplanation(
+      Transaction transaction,
+      StreamingContext context,
+      List<AgentInsight> insights,
+      double riskScore) {
+
+    StringBuilder explanation = new StringBuilder();
+    explanation.append("AI AGENTS ENHANCED WITH STREAMING INTELLIGENCE\n\n");
+
+    // Streaming context summary
+    explanation.append("REAL-TIME STREAMING CONTEXT:\n");
+    explanation.append("- ").append(context.getAIContext()).append("\n");
+    if (context.hasHighVelocity()) {
+      explanation.append("-  HIGH VELOCITY DETECTED: Rapid-fire transaction pattern\n");
+    }
+    if (context.customerProfile() != null) {
+      explanation.append("-  CUSTOMER BASELINE: Behavioral profile available\n");
+    }
+    explanation.append("\n");
+
+    // Agent analysis with streaming enhancement
+    explanation.append("AI AGENT ANALYSIS (Enhanced with Streaming Data):\n");
+    for (AgentInsight insight : insights) {
+      explanation
+          .append("- ")
+          .append(insight.agentName())
+          .append(" (Risk: ")
+          .append(String.format("%.1f%%", insight.riskScore() * 100))
+          .append("): ")
+          .append(insight.reasoning())
+          .append("\n");
+    }
+
+    // Final streaming-intelligent decision
+    explanation.append("\n STREAMING-INTELLIGENT DECISION:\n");
+    explanation
+        .append("- Final Risk Score: ")
+        .append(String.format("%.1f%%", riskScore * 100))
+        .append("\n");
+    explanation
+        .append("- Decision: ")
+        .append(riskScore >= 0.6 ? "FRAUD DETECTED" : "LEGITIMATE TRANSACTION")
+        .append("\n");
+    explanation.append(
+        "- Intelligence Sources: Real-time velocity, customer profiles, temporal patterns");
+
+    return explanation.toString();
+  }
+
+  // ================================
+  // STREAMING-ENHANCED HELPER METHODS
+  // ================================
+
+  private boolean requiresStreamingCollaboration(
+      List<AgentInsight> insights, StreamingContext context) {
+    boolean hasDisagreement = requiresCollaboration(insights);
+    boolean hasHighVelocity = context.hasHighVelocity();
+    boolean hasCustomerProfile = context.customerProfile() != null;
+
+    return hasDisagreement || hasHighVelocity || hasCustomerProfile;
+  }
+
+  private List<AgentInsight> facilitateVelocityCollaboration(
+      Transaction transaction, StreamingContext context, List<AgentInsight> insights) {
+
+    // Velocity-focused collaboration between Pattern Detector and Temporal Analyst
+    List<AgentInsight> velocityInsights = new ArrayList<>();
+
+    String velocityQuestion =
+        String.format(
+            "High velocity detected (%d transactions). Does this align with automated attack patterns?",
+            context.recentTransactionsCount());
+
+    AgentInsight patternResponse = patternDetector.collaborate(transaction, velocityQuestion);
+    AgentInsight temporalResponse = temporalAnalyst.collaborate(transaction, velocityQuestion);
+
+    velocityInsights.add(patternResponse);
+    velocityInsights.add(temporalResponse);
+
+    return velocityInsights;
+  }
+
+  private List<AgentInsight> facilitateCustomerProfileCollaboration(
+      Transaction transaction, StreamingContext context, List<AgentInsight> insights) {
+
+    // Customer profile collaboration between Behavior Analyst and Risk Assessor
+    List<AgentInsight> profileInsights = new ArrayList<>();
+
+    String profileQuestion =
+        String.format(
+            "Customer profile shows $%.0f average transactions, %s risk level. How does this affect your analysis?",
+            context.customerProfile().averageTransactionAmount(),
+            context.customerProfile().riskLevel());
+
+    AgentInsight behaviorResponse = behaviorAnalyst.collaborate(transaction, profileQuestion);
+    AgentInsight riskResponse = riskAssessor.collaborate(transaction, profileQuestion);
+
+    profileInsights.add(behaviorResponse);
+    profileInsights.add(riskResponse);
+
+    return profileInsights;
   }
 
   private boolean requiresCollaboration(List<AgentInsight> insights) {
@@ -440,15 +580,17 @@ public class AgentCoordinator {
   }
 
   /**
-   * Build final consensus among all agents
+   * Build a final consensus among all agents using streaming intelligence and agent analyses
    *
    * @param transaction try
+   * @param context streaming context
    * @param insights list of AgentInsight
    * @return insights
    */
-  private AgentInsight buildAgentConsensus(Transaction transaction, List<AgentInsight> insights) {
+  private AgentInsight buildStreamingConsensus(
+      Transaction transaction, StreamingContext context, List<AgentInsight> insights) {
 
-    // Create summary of all agent findings
+    // Create streaming-enhanced consensus
     String agentSummary =
         insights.stream()
             .map(
@@ -458,47 +600,50 @@ public class AgentCoordinator {
                         insight.agentName(), insight.riskScore(), insight.reasoning()))
             .collect(Collectors.joining("\n"));
 
-    // Ask AI to synthesize consensus
     String consensusPrompt =
         String.format(
             """
-                        You are the lead fraud investigator reviewing findings from your team of 5 specialists.
+              You are the lead fraud investigator with access to real-time streaming intelligence.
 
-                        Transaction: %s
+              STREAMING CONTEXT: %s
 
-                        Agent Findings:
-                        %s
+              Transaction: %s
 
-                        Based on all agent analyses, provide a final consensus:
-                        - Do the agents generally agree or disagree?
-                        - What's the overall fraud risk?
-                        - What are the key factors driving the decision?
+              Agent Findings:
+              %s
 
-                        Format:
-                        RISK_SCORE: [0.0-1.0]
-                        REASONING: [Consensus analysis]
-                        RECOMMENDATION: [Final action]
-                        """,
-            transaction.toAnalysisText(), agentSummary);
+              Based on streaming intelligence and agent analyses, provide final consensus:
+              - How does streaming context enhance the decision?
+              - What's the overall fraud risk with streaming intelligence?
+              - Key factors from both AI analysis and streaming data?
+
+              Format:
+              RISK_SCORE: [0.0-1.0]
+              REASONING: [Streaming-enhanced consensus analysis]
+              RECOMMENDATION: [Final action with streaming intelligence]
+              """,
+            context.getAIContext(), /*@formatter:off*/
+            transaction.toAnalysisText(),
+            /*@formatter:off*/
+            agentSummary);
 
     try {
       String consensusResponse = chatModel.call(consensusPrompt);
-
       return AgentInsight.create(
-          "Consensus Building",
-          "CONSENSUS_ORCHESTRATOR",
+          "Streaming Intelligence Consensus",
+          "STREAMING_CONSENSUS_ORCHESTRATOR",
           consensusResponse,
           AgenticFraudUtils.extractRiskScore(consensusResponse),
           AgenticFraudUtils.extractReasoning(consensusResponse),
           AgenticFraudUtils.extractRecommendation(consensusResponse));
     } catch (Exception e) {
-      logger.error("Error building consensus: {}", e.getMessage());
+      logger.error("Error building streaming consensus: {}", e.getMessage());
       return AgentInsight.create(
-          "Consensus Building",
-          "CONSENSUS_ORCHESTRATOR",
-          "Error buidling consensus:" + e.getMessage(),
+          "Streaming Intelligence Consensus",
+          "STREAMING_CONSENSUS_ORCHESTRATOR",
+          "Error building streaming consensus: " + e.getMessage(),
           0.5,
-          "Technical error occured during consensus building",
+          "Technical error occurred during streaming consensus building",
           "Manual review required");
     }
   }
@@ -520,6 +665,7 @@ public class AgentCoordinator {
   }
 
   private double calculateWeightedRiskScore(List<AgentInsight> insights) {
+
     // weight different agents based on their specialization relevance
     double totalScore = 0;
     double totalWeight = 0;
@@ -535,7 +681,7 @@ public class AgentCoordinator {
 
   private double getAgentWeight(String agentName) {
 
-    // Give different weights based on agent type
+    // Give different weights based on an agent type
     return switch (agentName) {
       case "BEHAVIOR_ANALYST" -> 1.2; // High weight - behavior is key
       case "PATTERN_DETECTOR" -> 1.3; // Highest weight - patterns are critical
@@ -573,7 +719,9 @@ public class AgentCoordinator {
         List.of());
   }
 
-  private void logAgentSummary(List<AgentInsight> insights) {
+  private void logAgentSummary(List<AgentInsight> insights, StreamingContext streamingContext) {
+    logger.info("Streaming Intelligence Summary:");
+    logger.info("   Context: {}", streamingContext.getAIContext());
     for (AgentInsight insight : insights) {
       logger.info(
           "  {} → Risk: {:.2f}, Confidence: {:.2f}",

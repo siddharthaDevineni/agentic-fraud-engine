@@ -1,6 +1,7 @@
 package com.agenticfraud.engine.controllers;
 
 import com.agenticfraud.engine.models.FraudDecision;
+import com.agenticfraud.engine.models.StreamingContext;
 import com.agenticfraud.engine.models.Transaction;
 import com.agenticfraud.engine.services.AgentCoordinator;
 import jakarta.validation.Valid;
@@ -25,8 +26,8 @@ public class FraudDetectionController {
   }
 
   /**
-   * Analyzes a given transaction to determine if it is potentially fraudulent using a multi-agent
-   * AI system.
+   * Analyzes a given transaction using streaming-intelligent AI agents to determine if it is potentially fraudulent.
+   * Even REST API calls benefit from streaming intelligence architecture
    *
    * @param transaction the transaction to be analyzed. Must be a valid {@link Transaction} object.
    * @return a {@link ResponseEntity} containing a {@link FraudDecision} that encapsulates the fraud
@@ -37,27 +38,31 @@ public class FraudDetectionController {
   public ResponseEntity<FraudDecision> analyzeTransaction(
       @Valid @RequestBody Transaction transaction) {
 
-    logger.info("New fraud analysis request for transaction: {}", transaction.transactionId());
+    logger.info("New streaming-intelligent fraud analysis request for transaction: {}", transaction.transactionId());
 
     try {
 
-      FraudDecision decision = agentCoordinator.investigateTransaction(transaction);
+        StreamingContext restApiContext = createRestApiStreamingContext(transaction);
+
+        FraudDecision decision = agentCoordinator.investigateTransaction(transaction, restApiContext);
 
       logger.info(
-          "Analysis complete: {} (confidence: {:.2f})",
+          "Streaming-intelligent analysis complete: {} (confidence: {:.2f})",
           decision.isFraudulent() ? "FRAUD" : "LEGITIMATE",
           decision.confidenceScore());
 
       return ResponseEntity.ok(decision);
     } catch (Exception e) {
       logger.error(
-          "Error analyzing transaction {}: {}", transaction.transactionId(), e.getMessage());
+          "Error in streaming-intelligent analysis {}: {}",
+          transaction.transactionId(),
+          e.getMessage());
 
       FraudDecision errorDecision =
           FraudDecision.fraudulent(
               transaction.transactionId(),
               0.5,
-              "Technical Error",
+              "Technical Error in Streaming Analysis",
               "Analysis failed due to technical error: " + e.getMessage(),
               List.of());
 
@@ -66,33 +71,46 @@ public class FraudDetectionController {
   }
 
   /**
-   * Get information about the AI agents
+   * Create a streaming context for the REST API calls
+   *
+   * @param transaction transaction
+   * @return StreamingContext
+   */
+  private StreamingContext createRestApiStreamingContext(Transaction transaction) {
+    return new StreamingContext(
+        null,
+        null,
+        "REST API call - Single transaction analysis with streaming-intelligent agents");
+  }
+
+  /**
+   * Get information about the streaming-intelligent AI agents
    *
    * @return Map of agent information
    */
   @GetMapping("/agents/info")
   public ResponseEntity<Map<String, Object>> getAgentsInfo() {
 
-    Map<String, Object> agentInfo =
-        Map.of(
-            "totalAgents",
-            5,
-            "agents",
-            Map.of(
-                "BEHAVIOR_ANALYST", "Analyzes customer behavior patterns and anomalies",
-                "PATTERN_DETECTOR", "Identifies known fraud patterns and attack vectors",
-                "RISK_ASSESSOR", "Calculates overall financial risk and impact",
-                "GEOGRAPHIC_ANALYST", "Evaluates location-based risk factors",
-                "TEMPORAL_ANALYST", "Analyzes timing patterns and velocity"),
-            "capabilities",
-            List.of(
-                "Parallel multi-agent analysis",
-                "Agent collaboration and debate",
-                "Consensus building through weighted voting",
-                "Explainable AI decision making",
-                "Real-time learning from feedback"),
-            "version",
-            "1.0.0");
+      Map<String, Object> agentInfo =
+              Map.of(
+                      "totalAgents", 5,
+                      "architecture", "Streaming-Intelligent AI",
+                      "agents",
+                      Map.of(
+                              "BEHAVIOR_ANALYST", "Analyzes customer behavior with velocity intelligence",
+                              "PATTERN_DETECTOR", "Identifies attack patterns with streaming context",
+                              "RISK_ASSESSOR", "Calculates risk with customer profile intelligence",
+                              "GEOGRAPHIC_ANALYST", "Evaluates location risks with streaming data",
+                              "TEMPORAL_ANALYST", "Analyzes timing patterns with velocity context"),
+                      "streamingCapabilities",
+                      List.of(
+                              "Real-time velocity intelligence",
+                              "Customer profile streaming context",
+                              "AI-enhanced pattern detection",
+                              "Streaming-intelligent decision synthesis",
+                              "Dynamic risk adjustment with streaming data"),
+                      "uniqueValue", "Kafka streaming expertise enhances AI intelligence",
+                      "version", "1.0.0");
 
     return ResponseEntity.ok(agentInfo);
   }
@@ -100,23 +118,25 @@ public class FraudDetectionController {
   @GetMapping("/health")
   public ResponseEntity<Map<String, Object>> healthCheck() {
 
-    try {
-      // Simple health check - just verify coordinator is available
-      Map<String, Object> health =
-          Map.of(
-              "status", "UP",
-              "agentCoordinator", "ACTIVE",
-              "aiSystem", "OPERATIONAL",
-              "timestamp", java.time.LocalDateTime.now());
+      try {
+          Map<String, Object> health =
+                  Map.of(
+                          "status", "UP",
+                          "architecture", "Streaming-Intelligent AI",
+                          "agentCoordinator", "STREAMING_INTELLIGENT_MODE",
+                          "aiSystem", "OPERATIONAL",
+                          "streamingIntelligence", "ACTIVE",
+                          "timestamp", java.time.LocalDateTime.now());
 
-      return ResponseEntity.ok(health);
-    } catch (Exception e) {
-      Map<String, Object> health =
-          Map.of(
-              "status", "DOWN",
-              "error", e.getMessage(),
-              "timestamp", java.time.LocalDateTime.now());
-      return ResponseEntity.status(503).body(health);
-    }
+          return ResponseEntity.ok(health);
+      } catch (Exception e) {
+          Map<String, Object> health =
+                  Map.of(
+                          "status", "DOWN",
+                          "error", e.getMessage(),
+                          "architecture", "Streaming-Intelligent AI",
+                          "timestamp", java.time.LocalDateTime.now());
+          return ResponseEntity.status(503).body(health);
+      }
   }
 }

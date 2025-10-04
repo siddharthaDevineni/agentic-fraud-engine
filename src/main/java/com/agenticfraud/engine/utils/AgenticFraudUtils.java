@@ -9,6 +9,11 @@ public class AgenticFraudUtils {
 
   private AgenticFraudUtils() {}
 
+    /**
+     * Extract the risk score from the AI analysis string.
+     * @param analysis The analysis string.
+     * @return The risk score.
+     */
   public static double extractRiskScore(String analysis) {
     try {
       // Look for RISK_SCORE: pattern

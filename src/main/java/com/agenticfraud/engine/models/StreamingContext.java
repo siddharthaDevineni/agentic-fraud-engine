@@ -1,5 +1,11 @@
 package com.agenticfraud.engine.models;
 
+/**
+ * StreamingContext
+ * @param recentTransactionsCount recent transactions count in the last 5 minutes
+ * @param customerProfile customer profile
+ * @param contextSummary context summary
+ */
 public record StreamingContext(
     Long recentTransactionsCount, // Transactions in the last 5 minutes
     CustomerProfile customerProfile,

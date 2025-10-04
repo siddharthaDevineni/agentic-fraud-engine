@@ -1,9 +1,6 @@
 package com.agenticfraud.engine.streaming;
 
-import com.agenticfraud.engine.models.CustomerProfile;
-import com.agenticfraud.engine.models.FraudDecision;
-import com.agenticfraud.engine.models.StreamingContext;
-import com.agenticfraud.engine.models.Transaction;
+import com.agenticfraud.engine.models.*;
 import com.agenticfraud.engine.services.AgentCoordinator;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -35,7 +32,7 @@ public class FraudStreams {
   @PostConstruct
   public void startStreaming() {
 
-    logger.info("Starting Fraud Detection Streaming...");
+    logger.info("Starting Intelligent Fraud Detection Streaming...");
 
     StreamsBuilder builder = new StreamsBuilder();
 
@@ -44,7 +41,9 @@ public class FraudStreams {
     JsonSerde<CustomerProfile> customerProfileSerde = new JsonSerde<>(CustomerProfile.class);
     JsonSerde<FraudDecision> decisionJsonSerde = new JsonSerde<>(FraudDecision.class);
 
-    // Input streams
+    // ================================
+    // INPUT STREAMS
+    // ================================
     KStream<String, Transaction> transactions =
         builder.stream("transactions", Consumed.with(Serdes.String(), transactionSerde));
 
@@ -52,7 +51,7 @@ public class FraudStreams {
         builder.table("customerProfiles", Consumed.with(Serdes.String(), customerProfileSerde));
 
     // 1. Velocity context for AI agents, which provide velocity patterns to detect rapid-fire
-    // attacks
+    // attacks - calculate transaction velocity (count in 5-minute windows)
     KTable<String, Long> velocityContext =
         transactions
             .selectKey((key, txn) -> txn.customerId())
@@ -70,62 +69,83 @@ public class FraudStreams {
                 (oldValue, newValue) -> newValue, // keep the latest count
                 Materialized.as("current-velocity"));
 
-    KStream<String, Transaction> contextEnrichedTransactions =
+    // ================================
+    // STREAMING CONTEXT ENRICHMENT
+    // ================================
+    KStream<String, EnrichedTransaction> contextEnrichedTransactions =
         transactions
             .selectKey((key, txn) -> txn.customerId())
-            // Add customer behavioral context for AI agents
+            // Join with customer profiles to enrich transaction data
             .leftJoin(
                 customerProfiles,
                 (txn, profile) -> {
                   logger.info(
-                      "Enriching transaction {} with profile {}", txn.transactionId(), profile);
-                  return txn; // Transaction remains the same, we'll use profile in context
+                      "Enriching transaction {} with profile {}",
+                      txn.transactionId(),
+                      profile != null ? profile.customerId() : "NO PROFILE");
+                  // Create enriched object with profile, but no velocity yet
+                  return new EnrichedTransaction(txn, profile, null);
                 },
                 Joined.with(Serdes.String(), transactionSerde, customerProfileSerde))
 
-            // Add velocity context for AI agents
+            // Join with velocity context for AI agents to provide velocity patterns
             .leftJoin(
                 velocityContext,
-                (txn, velocity) -> {
+                (enriched, velocity) -> {
                   if (velocity != null && velocity > 3) {
-                    logger.info(
+                    logger.warn(
                         "High velocity detected for customer {}: {} txns/5min",
-                        txn.customerId(),
+                        enriched.transaction(),
                         velocity);
                   }
-                  return txn; // Transaction remains the same, we'll use velocity in context
+                  return new EnrichedTransaction(
+                      enriched.transaction(), enriched.customerProfile(), velocity);
                 },
-                Joined.with(Serdes.String(), transactionSerde, Serdes.Long()));
+                Joined.with(
+                    Serdes.String(), new JsonSerde<>(EnrichedTransaction.class), Serdes.Long()));
 
-    KStream<String, FraudDecision> contextualDecisions =
+    // ================================
+    // STREAMING-INTELLIGENT ANALYSIS
+    // ================================
+
+    KStream<String, FraudDecision> streamingIntelligentDecisions =
         contextEnrichedTransactions.mapValues(
-            ((readOnlyKey, txn) -> {
+            ((readOnlyKey, enriched) -> {
               try {
-                // Build streaming context for AI agents
-                String customerId = txn.customerId();
+                Transaction txn = enriched.transaction();
 
-                // Get customer profile (from previous join)
-                CustomerProfile profile = getCustomerProfile(customerId);
-
-                // Get velocity context (from previous join)
-                Long velocity = getVelocityContext(customerId);
-
-                // Create AI-focused streaming context
-                StreamingContext context =
-                    new StreamingContext(
-                        velocity, profile, buildContextSummary(velocity, profile, txn));
+                // Build streaming context from enriched data
+                StreamingContext context = enriched.toStreamingContext();
 
                 logger.info(
                     "Analyzing with streaming context for transaction {}: {}",
-                    txn.transactionId(),
+                    enriched.transaction(),
                     context.getAIContext());
 
-                // AI agents analyze transaction with streaming context
-                return agentCoordinator.investigateTransactionWithStreamingContext(txn, context);
+                // Log streaming context details
+                if (enriched.velocityCount() != null && enriched.velocityCount() > 1) {
+                  logger.info(
+                      "Velocity: {} transactions in last 5 minutes", enriched.velocityCount());
+                }
+
+                if (enriched.customerProfile() != null) {
+                  logger.info(
+                      "Customer Profile: $%.0f avg, %s risk, %s",
+                      enriched.customerProfile().averageTransactionAmount(),
+                      enriched.customerProfile().riskLevel(),
+                      enriched.customerProfile().isAmountUnusual(txn.amount())
+                          ? "UNUSUAL AMOUNT"
+                          : "normal amount");
+                }
+
+                // AI agents analyze transaction with streaming intelligence via context
+                logger.info(
+                    "Invoking AI-enhanced streaming intelligence context for transaction {}", txn);
+                return agentCoordinator.investigateTransaction(txn, context);
 
               } catch (Exception e) {
                 logger.error("Error in contextual analysis: {}", e.getMessage(), e);
-                return AgentCoordinator.createErrorDecision(txn, e);
+                return AgentCoordinator.createErrorDecision(enriched.transaction(), e);
               }
             }));
 
@@ -133,7 +153,7 @@ public class FraudStreams {
 
     // Intelligent Routing: AI-driven decision routing
     Map<String, KStream<String, FraudDecision>> intelligentRouting =
-        contextualDecisions
+        streamingIntelligentDecisions
             .split(Named.as("intelligent-routing"))
 
             // AI High Confidence Fraud
@@ -149,7 +169,7 @@ public class FraudStreams {
             // AI approved
             .defaultBranch(Branched.as("ai-approved"));
 
-    // Route to appropriate business processes
+    // Route to appropriate output topics
     intelligentRouting
         .get("intelligent-routing-ai-fraud-alert")
         .peek(
@@ -184,64 +204,44 @@ public class FraudStreams {
 
     logger.info("Intelligent routing complete");
 
-    // AI LEARNING LOOP: Feedback enhances future decisions
+    // ================================
+    // AI LEARNING LOOP
+    // ================================
     KStream<String, Map<String, Object>> learningFeedback =
         builder.stream(
             "analyst-feedback", Consumed.with(Serdes.String(), new JsonSerde<>(Map.class)));
 
     learningFeedback.foreach(
         (key, feedback) ->
-            logger.info("AI LEARNING: Processing Feedback for: {}", feedback.get("transactionId")));
+            logger.info("AI LEARNING: Processing Feedback for transaction : {}", feedback.get("transactionId")));
+
+      logger.info("AI learning loop configured");
 
     // Start the intelligent streaming application
     this.kafkaStreams = new KafkaStreams(builder.build(), getStreamProperties());
 
-    kafkaStreams.setStateListener(((newState,oldState) ->
+    kafkaStreams.setStateListener(
+        ((newState, oldState) ->
             logger.info("Intelligent Streams State changed from {} to {}", oldState, newState)));
 
     kafkaStreams.start();
     logger.info("Intelligent Fraud Detection streaming started");
   }
 
-    /**
-     * 🔧 Kafka Streams properties optimized for intelligent processing
-     */
-    private Properties getStreamProperties() {
-        Properties props = new Properties();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "intelligent-fraud-detection");
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, JsonSerde.class);
+  /** Kafka Streams properties optimized for intelligent processing */
+  private Properties getStreamProperties() {
+    Properties props = new Properties();
+    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "intelligent-fraud-detection");
+    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+    props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, JsonSerde.class);
 
-        // Optimized for AI workloads
-        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
-        props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
-        props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 5 * 1024 * 1024); // 5MB
+    // Optimized for AI workloads
+    props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
+    props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
+    props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 10 * 1024 * 1024); // 10MB
 
-        return props;
-    }
-
-  private CustomerProfile getCustomerProfile(String customerId) {
-    return null;
-  }
-
-  private Long getVelocityContext(String customerId) {
-    return 0L;
-  }
-
-  private String buildContextSummary(Long velocity, CustomerProfile profile, Transaction txn) {
-    StringBuilder summary = new StringBuilder("Streaming Context: ");
-
-    if (velocity != null && velocity > 1) {
-      summary.append(String.format("%d recent txns, ", velocity));
-    }
-
-    if (profile != null) {
-      summary.append(String.format("$%.0f avg, ", profile.averageTransactionAmount()));
-      summary.append(String.format("%s risk customer", profile.riskLevel()));
-    }
-
-    return summary.toString();
+    return props;
   }
 
   // Helper methods for creating business outputs
@@ -278,12 +278,12 @@ public class FraudStreams {
         "timestamp", System.currentTimeMillis());
   }
 
-    @PreDestroy
-    public void stopIntelligentStreaming() {
-        if (kafkaStreams != null) {
-            logger.info("Stopping Intelligent Fraud Detection Streams...");
-            kafkaStreams.close();
-            logger.info("Intelligent streaming stopped");
-        }
+  @PreDestroy
+  public void stopIntelligentStreaming() {
+    if (kafkaStreams != null) {
+      logger.info("Stopping Intelligent Fraud Detection Streams...");
+      kafkaStreams.close();
+      logger.info("Intelligent streaming stopped");
     }
+  }
 }
