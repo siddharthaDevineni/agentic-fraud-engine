@@ -16,7 +16,7 @@
     <artifactId>agentic-fraud-engine</artifactId>
     <version>1.0.0</version>
     <name>agentic-fraud-engine</name>
-    <description>Revolutionary Multi-Agent Fraud Detection System</description>
+    <description>Multi-agent AI fraud detection with Kafka streaming intelligence</description>
 
     <properties>
         <java.version>21</java.version>
