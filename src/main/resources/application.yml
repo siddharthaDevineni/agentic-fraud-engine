@@ -7,14 +7,19 @@ spring:
 
   # Spring AI Configuration
   ai:
-    openai:
-      api-key: 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
-      base-url: https://api.groq.com/openai
+    ollama:
+      base-url: http://localhost:11434
       chat:
         options:
-          model: llama-3.3-70b-versatile
+          model: llama3.2
           temperature: 0.1
-          max-tokens: 4096
+          num-predict: 4096     # Max output tokens
+          num-ctx: 8192         # Context window
+          num-thread: 8         # CPU threads
+          num-gpu: 1            # Use GPU if available
+          repeat-penalty: 1.1   # Reduce repetition
+          top-k: 40
+          top-p: 0.9
 
   # Kafka Configuration
   kafka:

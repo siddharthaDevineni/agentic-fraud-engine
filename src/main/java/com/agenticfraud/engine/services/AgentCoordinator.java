@@ -85,7 +85,7 @@ public class AgentCoordinator {
 
       long duration = System.currentTimeMillis() - startTime;
       logger.info(
-          "Intelligent streaming investigation completed in {}ms: {} (confidence: {:.1f}%)",
+          "Intelligent streaming investigation completed in {}ms: {} (confidence: {}%)",
           duration,
           finalDecision.isFraudulent() ? "FRAUD DETECTED" : "LEGITIMATE",
           finalDecision.confidenceScore() * 100);
@@ -315,7 +315,7 @@ public class AgentCoordinator {
         generateStreamingIntelligentExplanation(transaction, context, allInsights, finalRiskScore);
 
     logger.info(
-        " Streaming intelligence applied: Base={:.2f}, Bonus={:.2f}, Final={:.2f}",
+        "Streaming intelligence applied: Base={}, Bonus={}, Final={}",
         baseRiskScore,
         streamingIntelligenceBonus,
         finalRiskScore);
@@ -721,10 +721,10 @@ public class AgentCoordinator {
 
   private void logAgentSummary(List<AgentInsight> insights, StreamingContext streamingContext) {
     logger.info("Streaming Intelligence Summary:");
-    logger.info("   Context: {}", streamingContext.getAIContext());
+    logger.info("Context: {}", streamingContext.getAIContext());
     for (AgentInsight insight : insights) {
       logger.info(
-          "  {} → Risk: {:.2f}, Confidence: {:.2f}",
+          "{} → Risk: {}, Confidence: {}",
           insight.agentName(),
           insight.riskScore(),
           insight.confidence());

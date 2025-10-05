@@ -61,9 +61,9 @@ public class FraudStreams {
             .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(5)))
             .count(Materialized.as("velocity-windows"))
 
-            // Convert windowed table to regular table but first to KStream with each record as a
+            // Convert windowed table to regular table but first to KStream with each record as a <Windowed<String>, Long>
 
-            // KStream<Windowed<String>, Long> to a KStream<String, Long> value
+            // KStream<Windowed<String>, Long> -> KStream<String, Long> value
             .toStream()
 
             // Windowed("CUST-001", [10:00-10:05]), Value=3 -> Key="CUST-001", Value=3
