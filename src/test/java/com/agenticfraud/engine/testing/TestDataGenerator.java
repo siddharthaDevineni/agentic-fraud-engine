@@ -33,7 +33,7 @@ public class TestDataGenerator {
     List<CustomerProfile> customerProfiles = generateCustomerProfiles(10);
     sendCustomerProfiles(producer, customerProfiles);
 
-    System.out.println("\nGenerating Test Transactions...");
+    System.out.println("Generating Test Transactions...");
     System.out.println("Choose scenario:");
     System.out.println("1. Normal transactions");
     System.out.println("2. High velocity attack (rapid-fire)");

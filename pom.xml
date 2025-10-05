@@ -20,7 +20,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-ai.version>1.0.0-M2</spring-ai.version>
+        <spring-ai.version>1.0.0-M4</spring-ai.version>
         <kafka.version>3.6.1</kafka.version>
     </properties>
 
@@ -36,7 +36,6 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Spring AI - The Magic! (includes both chat and embedding) -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>

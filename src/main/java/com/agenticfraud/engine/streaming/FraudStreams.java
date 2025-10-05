@@ -9,11 +9,13 @@ import java.util.Map;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.support.serializer.JsonSerde;
@@ -60,14 +62,24 @@ public class FraudStreams {
             .count(Materialized.as("velocity-windows"))
 
             // Convert windowed table to regular table but first to KStream with each record as a
-            // Windowed key and value
+
+            // KStream<Windowed<String>, Long> to a KStream<String, Long> value
             .toStream()
-            // Windowed("John", [10:00-10:05]), Value=3 -> Key="John", Value=3
+
+            // Windowed("CUST-001", [10:00-10:05]), Value=3 -> Key="CUST-001", Value=3
             .map((windowedKey, count) -> KeyValue.pair(windowedKey.key(), count))
-            .groupByKey()
+
+            // Group by customer ID with explicit serdes for Long
+            .groupByKey(Grouped.with(Serdes.String(), Serdes.Long()))
+
+            // Reduce to keep the latest count with explicit serdes
             .reduce(
                 (oldValue, newValue) -> newValue, // keep the latest count
-                Materialized.as("current-velocity"));
+                Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("current-velocity")
+                    .withKeySerde(Serdes.String())
+                    .withValueSerde(Serdes.Long()));
+
+      logger.info("Velocity intelligence configured");
 
     // ================================
     // STREAMING CONTEXT ENRICHMENT
@@ -118,7 +130,7 @@ public class FraudStreams {
                 StreamingContext context = enriched.toStreamingContext();
 
                 logger.info(
-                    "Analyzing with streaming context for transaction {}: {}",
+                    "Analyzing with streaming context for transaction: {}: {}",
                     enriched.transaction(),
                     context.getAIContext());
 
@@ -130,17 +142,18 @@ public class FraudStreams {
 
                 if (enriched.customerProfile() != null) {
                   logger.info(
-                      "Customer Profile: $%.0f avg, %s risk, %s",
-                      enriched.customerProfile().averageTransactionAmount(),
-                      enriched.customerProfile().riskLevel(),
-                      enriched.customerProfile().isAmountUnusual(txn.amount())
-                          ? "UNUSUAL AMOUNT"
-                          : "normal amount");
+                      String.format(
+                          "Customer Profile: $%.0f avg, %s risk, %s",
+                          enriched.customerProfile().averageTransactionAmount(),
+                          enriched.customerProfile().riskLevel(),
+                          enriched.customerProfile().isAmountUnusual(txn.amount())
+                              ? "UNUSUAL AMOUNT"
+                              : "normal amount"));
                 }
 
                 // AI agents analyze transaction with streaming intelligence via context
                 logger.info(
-                    "Invoking AI-enhanced streaming intelligence context for transaction {}", txn);
+                    "Invoking AI-enhanced streaming intelligence context for transaction: {}", txn);
                 return agentCoordinator.investigateTransaction(txn, context);
 
               } catch (Exception e) {
@@ -154,7 +167,7 @@ public class FraudStreams {
     // Intelligent Routing: AI-driven decision routing
     Map<String, KStream<String, FraudDecision>> intelligentRouting =
         streamingIntelligentDecisions
-            .split(Named.as("intelligent-routing"))
+            .split()
 
             // AI High Confidence Fraud
             .branch(
@@ -169,13 +182,43 @@ public class FraudStreams {
             // AI approved
             .defaultBranch(Branched.as("ai-approved"));
 
+    logger.info("Routing map keys: {}", intelligentRouting.keySet());
+
+    intelligentRouting
+        .keySet()
+        .forEach(
+            (key) -> {
+              logger.info("Routing key: {}", key);
+              intelligentRouting
+                  .get(key)
+                  .peek((k, v) -> logger.info("Key: {}, Decision: {}", k, v));
+            });
+
+    String fraudKey =
+        intelligentRouting.keySet().stream()
+            .filter(k -> k.contains("ai-fraud-alert"))
+            .findFirst()
+            .orElseThrow();
+
+    String reviewKey =
+        intelligentRouting.keySet().stream()
+            .filter(k -> k.contains("ai-review-needed"))
+            .findFirst()
+            .orElseThrow();
+
+    String approvedKey =
+        intelligentRouting.keySet().stream()
+            .filter(k -> k.contains("ai-approved"))
+            .findFirst()
+            .orElseThrow();
+
     // Route to appropriate output topics
     intelligentRouting
-        .get("intelligent-routing-ai-fraud-alert")
+        .get(fraudKey)
         .peek(
             (key, decision) ->
                 logger.warn(
-                    "AI FRAUD ALERT: {} (Confidence: {:.1f}%) - agents: {}",
+                    "AI FRAUD ALERT for transaction: {} Confidence: {}% - agents: {}",
                     decision.transactionId(),
                     decision.confidenceScore() * 100,
                     decision.agentInsights().size()))
@@ -183,21 +226,21 @@ public class FraudStreams {
         .to("fraud-alerts", Produced.with(Serdes.String(), new JsonSerde<>()));
 
     intelligentRouting
-        .get("intelligent-routing-ai-review-needed")
+        .get(reviewKey)
         .peek(
             (key, decision) ->
                 logger.info(
-                    "AI REVIEW NEEDED: {} (confidence: {:.1f}%)",
+                    "AI REVIEW NEEDED: {} (confidence: {}%)",
                     decision.transactionId(), decision.confidenceScore() * 100))
         .mapValues(this::createReviewCase)
         .to("human-review", Produced.with(Serdes.String(), new JsonSerde<>()));
 
     intelligentRouting
-        .get("intelligent-routing-ai-approved")
+        .get(approvedKey)
         .peek(
             (key, decision) ->
                 logger.debug(
-                    "AI APPROVED: {} (confidence: {:.1f}%)",
+                    "AI APPROVED: {} (confidence: {}%)",
                     decision.transactionId(), decision.confidenceScore() * 100))
         .mapValues(this::createApproval)
         .to("approved-transactions", Produced.with(Serdes.String(), new JsonSerde<>()));
@@ -213,9 +256,11 @@ public class FraudStreams {
 
     learningFeedback.foreach(
         (key, feedback) ->
-            logger.info("AI LEARNING: Processing Feedback for transaction : {}", feedback.get("transactionId")));
+            logger.info(
+                "AI LEARNING: Processing Feedback for transaction : {}",
+                feedback.get("transactionId")));
 
-      logger.info("AI learning loop configured");
+    logger.info("AI learning loop configured");
 
     // Start the intelligent streaming application
     this.kafkaStreams = new KafkaStreams(builder.build(), getStreamProperties());

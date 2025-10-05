@@ -8,15 +8,13 @@ spring:
   # Spring AI Configuration
   ai:
     openai:
-      api-key: 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
+      api-key: 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
+      base-url: https://api.groq.com/openai
       chat:
         options:
-          model: gpt-4o
+          model: llama-3.3-70b-versatile
           temperature: 0.1
-          max-tokens: 1000
-      embedding:
-        options:
-          model: text-embedding-3-large
+          max-tokens: 4096
 
   # Kafka Configuration
   kafka:
