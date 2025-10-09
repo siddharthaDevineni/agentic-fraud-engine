@@ -62,8 +62,9 @@ public class AgentCoordinator {
       Transaction transaction, StreamingContext streamingContext) {
 
     logger.info(
-        "Starting intelligent streaming investigation for {} with context: {}",
+        "Starting intelligent streaming investigation for {} for customer: {} with context: {}",
         transaction.transactionId(),
+        transaction.customerId(),
         streamingContext.getAIContext());
 
     long startTime = System.currentTimeMillis();
@@ -252,22 +253,28 @@ public class AgentCoordinator {
     if (requiresStreamingCollaboration(individualInsights, streamingContext)) {
       logger.info("Streaming context triggers enhanced agent collaboration");
 
-      // High-velocity collaboration
+      // High-velocity collaboration between Pattern Detector and Temporal Analyst
       if (streamingContext.hasHighVelocity()) {
+        logger.info("High-velocity streaming enhanced agent collaboration");
         collaborativeInsights.addAll(
-            facilitateVelocityCollaboration(transaction, streamingContext, individualInsights));
+            facilitateVelocityCollaboration(transaction, streamingContext));
       }
 
-      // Customer profile collaboration
+      // Customer profile collaboration between Behavior Analyst and Risk Assessor
       if (streamingContext.customerProfile() != null) {
+        logger.info("Customer profile enhanced agent collaboration");
         collaborativeInsights.addAll(
-            facilitateCustomerProfileCollaboration(
-                transaction, streamingContext, individualInsights));
+            facilitateCustomerProfileCollaboration(transaction, streamingContext));
       }
 
       // Final streaming consensus
-      collaborativeInsights.add(
-          buildStreamingConsensus(transaction, streamingContext, individualInsights));
+      CompletableFuture<AgentInsight> consensusFuture =
+          CompletableFuture.supplyAsync(
+              () -> buildStreamingConsensus(transaction, streamingContext, individualInsights),
+              agentExecutor);
+
+      AgentInsight consensus = consensusFuture.join();
+      collaborativeInsights.add(consensus);
 
     } else {
       logger.info("Standard collaboration sufficient for this streaming context");
@@ -283,7 +290,7 @@ public class AgentCoordinator {
   // ================================
 
   /**
-   * Phase 3: Intelligent Decision Synthesis Final decision synthesis using streaming intelligence
+   * Phase 3: Intelligent Decision Synthesis: Final decision synthesis using streaming intelligence
    *
    * @param transaction trx
    * @param context streaming context
@@ -295,6 +302,8 @@ public class AgentCoordinator {
       StreamingContext context,
       List<AgentInsight> streamingIntelligentInsights,
       List<AgentInsight> collaborativeInsights) {
+
+    logger.debug("Phase 3: Final decision synthesis using streaming intelligence");
 
     // Combine all insights - streamingIntelligentInsights and collaborativeInsights
     List<AgentInsight> allInsights = new ArrayList<>();
@@ -447,30 +456,32 @@ public class AgentCoordinator {
   }
 
   private List<AgentInsight> facilitateVelocityCollaboration(
-      Transaction transaction, StreamingContext context, List<AgentInsight> insights) {
+      Transaction transaction, StreamingContext context) {
 
     // Velocity-focused collaboration between Pattern Detector and Temporal Analyst
-    List<AgentInsight> velocityInsights = new ArrayList<>();
-
+    logger.info(
+        "Facilitating Velocity-focused Collaboration between Pattern Detector and Temporal Analyst");
     String velocityQuestion =
         String.format(
             "High velocity detected (%d transactions). Does this align with automated attack patterns?",
             context.recentTransactionsCount());
 
-    AgentInsight patternResponse = patternDetector.collaborate(transaction, velocityQuestion);
-    AgentInsight temporalResponse = temporalAnalyst.collaborate(transaction, velocityQuestion);
+    CompletableFuture<AgentInsight> patternFuture =
+        CompletableFuture.supplyAsync(
+            () -> patternDetector.collaborate(transaction, velocityQuestion), agentExecutor);
+    CompletableFuture<AgentInsight> temporalFuture =
+        CompletableFuture.supplyAsync(
+            () -> temporalAnalyst.collaborate(transaction, velocityQuestion), agentExecutor);
 
-    velocityInsights.add(patternResponse);
-    velocityInsights.add(temporalResponse);
-
-    return velocityInsights;
+    return List.of(patternFuture.join(), temporalFuture.join());
   }
 
   private List<AgentInsight> facilitateCustomerProfileCollaboration(
-      Transaction transaction, StreamingContext context, List<AgentInsight> insights) {
+      Transaction transaction, StreamingContext context) {
 
     // Customer profile collaboration between Behavior Analyst and Risk Assessor
-    List<AgentInsight> profileInsights = new ArrayList<>();
+    logger.info(
+        "Facilitating Customer Profile Collaboration between Behavior Analyst and Risk Assessor");
 
     String profileQuestion =
         String.format(
@@ -478,13 +489,15 @@ public class AgentCoordinator {
             context.customerProfile().averageTransactionAmount(),
             context.customerProfile().riskLevel());
 
-    AgentInsight behaviorResponse = behaviorAnalyst.collaborate(transaction, profileQuestion);
-    AgentInsight riskResponse = riskAssessor.collaborate(transaction, profileQuestion);
+    CompletableFuture<AgentInsight> behaviorFuture =
+        CompletableFuture.supplyAsync(
+            () -> behaviorAnalyst.collaborate(transaction, profileQuestion), agentExecutor);
 
-    profileInsights.add(behaviorResponse);
-    profileInsights.add(riskResponse);
+    CompletableFuture<AgentInsight> riskFuture =
+        CompletableFuture.supplyAsync(
+            () -> riskAssessor.collaborate(transaction, profileQuestion), agentExecutor);
 
-    return profileInsights;
+    return List.of(behaviorFuture.join(), riskFuture.join());
   }
 
   private boolean requiresCollaboration(List<AgentInsight> insights) {
@@ -498,88 +511,6 @@ public class AgentCoordinator {
   }
 
   /**
-   * High-risk agents challenge low-risk agents If some agents see high risk but others don't, they
-   * debate
-   *
-   * @param transaction Trx
-   * @param insights List of AgentsInsight
-   * @return List of AgentInsight
-   */
-  private List<AgentInsight> facilitateHighRiskChallenge(
-      Transaction transaction, List<AgentInsight> insights) {
-
-    List<AgentInsight> challengeInsights = new ArrayList<>();
-
-    // Find agents with high-risk scores (>=0.7)
-    List<AgentInsight> highRiskAgents =
-        insights.stream().filter(insight -> insight.riskScore() >= 0.7).toList();
-
-    // Find agents with low-risk scores (<=0.4)
-    List<AgentInsight> lowRiskAgents =
-        insights.stream().filter(agentInsight -> agentInsight.riskScore() <= 0.4).toList();
-
-    if (!highRiskAgents.isEmpty() && !lowRiskAgents.isEmpty()) {
-      logger.info("High-risk agents challenging low-risk agents");
-
-      // High-risk agents present their case
-      for (AgentInsight highRisk : highRiskAgents) {
-        String challenge =
-            String.format(
-                "Agent %s found high risk (%.2f). What do you think about: %s",
-                highRisk.agentName(), highRisk.riskScore(), highRisk.reasoning());
-
-        // Ask low-risk agents to respond to the challenge
-        for (AgentInsight lowRisk : lowRiskAgents) {
-          FraudAgent agent = getAgentByName(lowRisk.agentName());
-          if (agent != null) {
-            AgentInsight response = agent.collaborate(transaction, challenge);
-            challengeInsights.add(response);
-          }
-        }
-      }
-    }
-
-    return challengeInsights;
-  }
-
-  /**
-   * Geographic and temporal agents cross-validate each other
-   *
-   * @param transaction trx
-   * @param insights list of AgentInsights
-   * @return insight list
-   */
-  private List<AgentInsight> facilitateCrossValidation(
-      Transaction transaction, List<AgentInsight> insights) {
-
-    List<AgentInsight> validationInsights = new ArrayList<>();
-
-    // Geographic analyst validates temporal findings
-    AgentInsight geoInsight = findInsightByAgent(insights, "GEOGRAPHIC_ANALYST");
-    AgentInsight timeInsight = findInsightByAgent(insights, "TEMPORAL_ANALYST");
-
-    if (geoInsight != null && timeInsight != null) {
-      String geoQuestion =
-          String.format(
-              "Geographic analysis shows: %s. Does this align with the timing patterns you found?",
-              geoInsight.reasoning());
-
-      AgentInsight temporalResponse = temporalAnalyst.collaborate(transaction, geoQuestion);
-      validationInsights.add(temporalResponse);
-
-      String timeQuestion =
-          String.format(
-              "Temporal analysis shows: %s. Does this make geographic sense?",
-              timeInsight.reasoning());
-
-      AgentInsight geoResponse = geographicAnalyst.collaborate(transaction, timeQuestion);
-      validationInsights.add(geoResponse);
-    }
-
-    return validationInsights;
-  }
-
-  /**
    * Build a final consensus among all agents using streaming intelligence and agent analyses
    *
    * @param transaction try
@@ -590,6 +521,7 @@ public class AgentCoordinator {
   private AgentInsight buildStreamingConsensus(
       Transaction transaction, StreamingContext context, List<AgentInsight> insights) {
 
+    logger.info("Building streaming consensus using streaming intelligence and agent analyses");
     // Create streaming-enhanced consensus
     String agentSummary =
         insights.stream()
@@ -657,6 +589,8 @@ public class AgentCoordinator {
 
     double agreementRatio = (double) agreeingAgents / insights.size();
 
+    logger.info(
+        "Confidence calculation: {} agents agree (ratio: {})", agreeingAgents, agreementRatio);
     // High agreement = high confidence
     if (agreementRatio >= 0.8) return 0.9;
     if (agreementRatio >= 0.6) return 0.7;
@@ -724,10 +658,8 @@ public class AgentCoordinator {
     logger.info("Context: {}", streamingContext.getAIContext());
     for (AgentInsight insight : insights) {
       logger.info(
-          "{} → Risk: {}, Confidence: {}",
-          insight.agentName(),
-          insight.riskScore(),
-          insight.confidence());
+          "{} → Risk: {}, Confidence: {} %",
+          insight.agentName(), insight.riskScore(), insight.confidence() * 100);
     }
   }
 }

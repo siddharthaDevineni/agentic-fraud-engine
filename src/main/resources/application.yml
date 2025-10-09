@@ -7,19 +7,14 @@ spring:
 
   # Spring AI Configuration
   ai:
-    ollama:
-      base-url: http://localhost:11434
+    openai:
+      api-key: your-api-key
+      base-url: https://api.groq.com/openai
       chat:
         options:
-          model: llama3.2
+          model: llama-3.1-8b-instant
           temperature: 0.1
-          num-predict: 4096     # Max output tokens
-          num-ctx: 8192         # Context window
-          num-thread: 8         # CPU threads
-          num-gpu: 1            # Use GPU if available
-          repeat-penalty: 1.1   # Reduce repetition
-          top-k: 40
-          top-p: 0.9
+          max-tokens: 256
 
   # Kafka Configuration
   kafka:
@@ -27,6 +22,9 @@ spring:
     consumer:
       group-id: fraud-engine
       auto-offset-reset: earliest
+      max.poll.interval.ms: 900000
+      max.poll.records: 1
+      session.timeout.ms: 300000
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:

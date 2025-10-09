@@ -100,6 +100,7 @@ public abstract class AbstractFraudAgent implements FraudAgent {
   // Helper methods
   protected String buildCollaborationPrompt(
       Transaction transaction, String question, Object... context) {
+      logger.info("Building collaboration prompt for {}: {}", getAgentId(), question);
     return String.format(
         """
                         You are a %s fraud detection specialist.

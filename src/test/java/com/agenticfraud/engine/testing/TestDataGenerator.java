@@ -30,7 +30,7 @@ public class TestDataGenerator {
 
     // Generate customer profiles first
     System.out.println("Generating Customer Profiles...");
-    List<CustomerProfile> customerProfiles = generateCustomerProfiles(10);
+    List<CustomerProfile> customerProfiles = generateCustomerProfiles(2);
     sendCustomerProfiles(producer, customerProfiles);
 
     System.out.println("Generating Test Transactions...");
@@ -45,7 +45,7 @@ public class TestDataGenerator {
     int choice = scanner.nextInt();
 
     switch (choice) {
-      case 1 -> generateNormalTransactions(producer, customerProfiles, 10);
+      case 1 -> generateNormalTransactions(producer, customerProfiles, 3);
       case 2 -> generateHighVelocityAttack(producer, customerProfiles.getFirst(), 15);
       case 3 -> generateUnusualAmountFraud(producer, customerProfiles.getFirst(), 5);
       case 4 -> generateMixedScenario(producer, customerProfiles);

@@ -8,15 +8,13 @@ spring:
   # Spring AI Configuration
   ai:
     openai:
-      api-key: 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
+      api-key: ${GROQ_API_KEY}
+      base-url: https://api.groq.com/openai
       chat:
         options:
-          model: gpt-4o
+          model: llama-3.1-8b-instant
           temperature: 0.1
-          max-tokens: 1000
-      embedding:
-        options:
-          model: text-embedding-3-large
+          max-tokens: 256
 
   # Kafka Configuration
   kafka:
@@ -24,6 +22,9 @@ spring:
     consumer:
       group-id: fraud-engine
       auto-offset-reset: earliest
+      max.poll.interval.ms: 900000
+      max.poll.records: 1
+      session.timeout.ms: 300000
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:

@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
@@ -61,7 +62,8 @@ public class FraudStreams {
             .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(5)))
             .count(Materialized.as("velocity-windows"))
 
-            // Convert windowed table to regular table but first to KStream with each record as a <Windowed<String>, Long>
+            // Convert windowed table to regular table but first to KStream with each record as a
+            // <Windowed<String>, Long>
 
             // KStream<Windowed<String>, Long> -> KStream<String, Long> value
             .toStream()
@@ -79,7 +81,7 @@ public class FraudStreams {
                     .withKeySerde(Serdes.String())
                     .withValueSerde(Serdes.Long()));
 
-      logger.info("Velocity intelligence configured");
+    logger.info("Velocity intelligence configured");
 
     // ================================
     // STREAMING CONTEXT ENRICHMENT
@@ -119,7 +121,6 @@ public class FraudStreams {
     // ================================
     // STREAMING-INTELLIGENT ANALYSIS
     // ================================
-
     KStream<String, FraudDecision> streamingIntelligentDecisions =
         contextEnrichedTransactions.mapValues(
             ((readOnlyKey, enriched) -> {
@@ -142,13 +143,12 @@ public class FraudStreams {
 
                 if (enriched.customerProfile() != null) {
                   logger.info(
-                      String.format(
-                          "Customer Profile: $%.0f avg, %s risk, %s",
-                          enriched.customerProfile().averageTransactionAmount(),
-                          enriched.customerProfile().riskLevel(),
-                          enriched.customerProfile().isAmountUnusual(txn.amount())
-                              ? "UNUSUAL AMOUNT"
-                              : "normal amount"));
+                      "Customer Profile: ${} avg, {} risk, {}",
+                      enriched.customerProfile().averageTransactionAmount(),
+                      enriched.customerProfile().riskLevel(),
+                      enriched.customerProfile().isAmountUnusual(txn.amount())
+                          ? "UNUSUAL AMOUNT"
+                          : "normal amount");
                 }
 
                 // AI agents analyze transaction with streaming intelligence via context
@@ -181,18 +181,6 @@ public class FraudStreams {
 
             // AI approved
             .defaultBranch(Branched.as("ai-approved"));
-
-    logger.info("Routing map keys: {}", intelligentRouting.keySet());
-
-    intelligentRouting
-        .keySet()
-        .forEach(
-            (key) -> {
-              logger.info("Routing key: {}", key);
-              intelligentRouting
-                  .get(key)
-                  .peek((k, v) -> logger.info("Key: {}, Decision: {}", k, v));
-            });
 
     String fraudKey =
         intelligentRouting.keySet().stream()
@@ -280,6 +268,7 @@ public class FraudStreams {
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
     props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
     props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, JsonSerde.class);
+    props.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, 4);
 
     // Optimized for AI workloads
     props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
