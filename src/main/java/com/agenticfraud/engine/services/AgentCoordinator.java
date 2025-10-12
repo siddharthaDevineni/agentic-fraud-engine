@@ -117,112 +117,24 @@ public class AgentCoordinator {
         List.of(
             // Behavior Analyst with Velocity Intelligence
             CompletableFuture.supplyAsync(
-                () -> {
-                  String velocityContext =
-                      streamingContext.hasHighVelocity()
-                          ? String.format(
-                              "HIGH VELOCITY ALERT: %d transactions detected",
-                              streamingContext.recentTransactionsCount())
-                          : "Normal transaction velocity";
-
-                  String contextPrompt =
-                      String.format(
-                          """
-                            STREAMING INTELLIGENCE: %s
-
-                            As a behavior analyst, analyze this transaction with real-time velocity context:
-                            %s
-
-                            Focus: How does the streaming velocity pattern affect behavioral risk assessment?
-                            """,
-                          velocityContext, transaction.toAnalysisText());
-                  return behaviorAnalyst.collaborate(transaction, contextPrompt);
-                },
+                () -> behaviorAnalyst.analyzeWithStreamingContext(transaction, streamingContext),
                 agentExecutor),
 
             // Pattern Detector with Attack Vector Intelligence
             CompletableFuture.supplyAsync(
-                () -> {
-                  String attackContext =
-                      streamingContext.hasHighVelocity()
-                          ? "RAPID-FIRE ATTACK PATTERN DETECTED - Analyze for card testing or credential stuffing"
-                          : "Single transaction pattern - Analyze for standalone fraud indicators";
-
-                  String velocityPrompt =
-                      String.format(
-                          """
-                                    ATTACK VECTOR INTELLIGENCE: %s
-
-                                    As a pattern detector, analyze attack patterns with streaming context:
-                                    %s
-
-                                    Focus: Does the velocity pattern match known automated attack vectors?
-                                    """,
-                          attackContext, transaction.toAnalysisText());
-                  return patternDetector.collaborate(transaction, velocityPrompt);
-                },
+                () -> patternDetector.analyzeWithStreamingContext(transaction, streamingContext),
                 agentExecutor),
             // Risk Assessor with Customer Profile Intelligence
             CompletableFuture.supplyAsync(
-                () -> {
-                  String profileContext =
-                      streamingContext.customerProfile() != null
-                          ? String.format(
-                              "Customer baseline available: $%.0f avg, %s risk level",
-                              streamingContext.customerProfile().averageTransactionAmount(),
-                              streamingContext.customerProfile().riskLevel())
-                          : "Limited customer profile data - using transaction-level analysis";
-
-                  String profilePrompt =
-                      String.format(
-                          """
-                                    CUSTOMER PROFILE INTELLIGENCE: %s
-
-                                    As a risk assessor, analyze risk with streaming customer context:
-                                    %s
-
-                                    Focus: How does this transaction compare to real-time customer behavioral baseline?
-                                    """,
-                          profileContext, transaction.toAnalysisText());
-                  return riskAssessor.collaborate(transaction, profilePrompt);
-                },
+                () -> riskAssessor.analyzeWithStreamingContext(transaction, streamingContext),
                 agentExecutor),
             // Geographic Analyst with Location Intelligence
             CompletableFuture.supplyAsync(
-                () -> {
-                  String locationPrompt =
-                      String.format(
-                          """
-                                    STREAMING CONTEXT: %s
-
-                                    As a geographic analyst, analyze location risk with streaming intelligence:
-                                    %s
-
-                                    Focus: Geographic risk factors enhanced by real-time context.
-                                    """,
-                          streamingContext.getAIContext(), transaction.toAnalysisText());
-                  return geographicAnalyst.collaborate(transaction, locationPrompt);
-                },
+                () -> geographicAnalyst.analyzeWithStreamingContext(transaction, streamingContext),
                 agentExecutor),
             // Temporal Analyst with Timing Intelligence
             CompletableFuture.supplyAsync(
-                () -> {
-                  String timingPrompt =
-                      String.format(
-                          """
-                                    TEMPORAL INTELLIGENCE: %s
-
-                                    As a temporal analyst, analyze timing patterns with streaming context:
-                                    %s
-
-                                    Focus: How do timing patterns correlate with streaming velocity data?
-                                    """,
-                          streamingContext.hasHighVelocity()
-                              ? "High-frequency timing detected"
-                              : "Standard timing analysis",
-                          transaction.toAnalysisText());
-                  return temporalAnalyst.collaborate(transaction, timingPrompt);
-                },
+                () -> temporalAnalyst.analyzeWithStreamingContext(transaction, streamingContext),
                 agentExecutor));
 
     // wait for all agents to complete and collect results of streaming-intelligent insights

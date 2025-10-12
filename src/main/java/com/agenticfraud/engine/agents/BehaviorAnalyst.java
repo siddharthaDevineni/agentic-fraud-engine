@@ -1,5 +1,7 @@
 package com.agenticfraud.engine.agents;
 
+import com.agenticfraud.engine.models.CustomerProfile;
+import com.agenticfraud.engine.models.StreamingContext;
 import com.agenticfraud.engine.models.Transaction;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
@@ -36,6 +38,59 @@ public class BehaviorAnalyst extends AbstractFraudAgent {
                 Be thorough but concise. Focus on behavioral red flags or normal patterns.
                 """,
         transaction.toAnalysisText());
+  }
+
+  @Override
+  protected String buildStreamingAnalysisPrompt(Transaction transaction, StreamingContext context) {
+    // Behavior Analyst focuses on VELOCITY PATTERNS in a streaming context
+    StringBuilder prompt = new StringBuilder();
+
+    prompt.append(
+        "You are an expert Customer Behavior Analyst specializing in fraud detection.\n\n");
+
+    // Emphasizing velocity intelligence, which is Behavior Analyst's specialty
+    prompt.append("STREAMING INTELLIGENCE - VELOCITY ANALYSIS:\n");
+    if (context.hasHighVelocity()) {
+      prompt.append(
+          String.format(
+              "HIGH VELOCITY ALERT: %d transactions in the last 5 minutes\n",
+              context.recentTransactionsCount()));
+      prompt.append("This is HIGHLY UNUSUAL for normal customer behavior!\n");
+    } else {
+      prompt.append("Normal transaction velocity detected\n");
+    }
+    prompt.append("\n");
+
+    // Customer baseline context
+    if (context.customerProfile() != null) {
+      CustomerProfile profile = context.customerProfile();
+      prompt.append("CUSTOMER BEHAVIORAL BASELINE:\n");
+      prompt.append(
+          String.format(
+              "- Average spending: $%.2f\n", profile.averageTransactionAmount().doubleValue()));
+      prompt.append(String.format("- Risk level: %s\n", profile.riskLevel()));
+      prompt.append(
+          String.format(
+              "- Typical categories: %s\n", String.join(", ", profile.transactionCategories())));
+      prompt.append(String.format("- Primary location: %s\n\n", profile.primaryLocation()));
+    }
+
+    prompt.append("TRANSACTION TO ANALYZE:\n");
+    prompt.append(transaction.toAnalysisText());
+    prompt.append("\n\n");
+
+    prompt.append("As a BEHAVIOR ANALYST, focus on:\n");
+    prompt.append("1. How does the VELOCITY pattern affect behavioral risk?\n");
+    prompt.append("2. Does spending amount deviate from customer baseline?\n");
+    prompt.append("3. Are there behavioral red flags in frequency/timing?\n");
+    prompt.append("4. Is this consistent with customer's normal behavior?\n\n");
+
+    prompt.append("Provide your analysis in this format:\n");
+    prompt.append("RISK_SCORE: [0.0-1.0]\n");
+    prompt.append("REASONING: [Behavioral analysis with velocity context]\n");
+    prompt.append("RECOMMENDATION: [Action based on behavioral patterns]\n");
+
+    return prompt.toString();
   }
 
   @Override

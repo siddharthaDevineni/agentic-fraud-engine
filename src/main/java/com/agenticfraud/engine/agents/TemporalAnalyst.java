@@ -1,5 +1,6 @@
 package com.agenticfraud.engine.agents;
 
+import com.agenticfraud.engine.models.StreamingContext;
 import com.agenticfraud.engine.models.Transaction;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
@@ -42,6 +43,57 @@ public class TemporalAnalyst extends AbstractFraudAgent {
                 Focus on timing inconsistencies or suspicious temporal patterns.
                 """,
         transaction.toAnalysisText());
+  }
+
+  @Override
+  protected String buildStreamingAnalysisPrompt(Transaction transaction, StreamingContext context) {
+    // Temporal Analyst focuses on TIMING VELOCITY in a streaming context
+    StringBuilder prompt = new StringBuilder();
+
+    prompt.append(
+        "You are an expert Temporal Pattern Analyst specializing in fraud detection.\n\n");
+
+    // Emphasizing timing velocity, which is Temporal Analyst's specialty
+    prompt.append("STREAMING INTELLIGENCE - TEMPORAL VELOCITY ANALYSIS:\n");
+    if (context.hasHighVelocity()) {
+      prompt.append(
+          String.format(
+              "RAPID-FIRE PATTERN: %d transactions in 5-minute window\n",
+              context.recentTransactionsCount()));
+      prompt.append("Analyze timing intervals:\n");
+      prompt.append("- Sub-second intervals = Bot activity\n");
+      prompt.append("- Regular intervals = Automated script\n");
+      prompt.append("- Burst pattern = Card testing attack\n");
+    } else {
+      prompt.append("Normal timing pattern\n");
+    }
+    prompt.append("\n");
+
+    // Transaction timing details
+    prompt.append("TRANSACTION TIMING:\n");
+    prompt.append(transaction.toAnalysisText());
+    prompt.append(String.format("\n- Hour: %d:00\n", transaction.timestamp().getHour()));
+    prompt.append(String.format("- Day: %s\n", transaction.timestamp().getDayOfWeek()));
+    prompt.append("\n");
+
+    if (context.customerProfile() != null) {
+      prompt.append("CUSTOMER TIMING BASELINE:\n");
+      prompt.append(String.format("- Risk level: %s\n", context.customerProfile().riskLevel()));
+      prompt.append("\n");
+    }
+
+    prompt.append("As a TEMPORAL ANALYST, focus on:\n");
+    prompt.append("1. Does the VELOCITY indicate automated/bot activity?\n");
+    prompt.append("2. Are transaction intervals suspicious (too fast/regular)?\n");
+    prompt.append("3. Is the timing consistent with normal human behavior?\n");
+    prompt.append("4. Do timing patterns match known attack vectors?\n\n");
+
+    prompt.append("Provide your analysis in this format:\n");
+    prompt.append("RISK_SCORE: [0.0-1.0]\n");
+    prompt.append("REASONING: [Temporal velocity analysis]\n");
+    prompt.append("RECOMMENDATION: [Time-based fraud prevention action]\n");
+
+    return prompt.toString();
   }
 
   @Override

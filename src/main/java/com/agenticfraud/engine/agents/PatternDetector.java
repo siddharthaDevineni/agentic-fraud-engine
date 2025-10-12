@@ -1,5 +1,7 @@
 package com.agenticfraud.engine.agents;
 
+import com.agenticfraud.engine.models.CustomerProfile;
+import com.agenticfraud.engine.models.StreamingContext;
 import com.agenticfraud.engine.models.Transaction;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
@@ -42,6 +44,61 @@ public class PatternDetector extends AbstractFraudAgent {
                 Be specific about which patterns you detect or explicitly rule out.
                 """,
         transaction.toAnalysisText());
+  }
+
+  @Override
+  protected String buildStreamingAnalysisPrompt(Transaction transaction, StreamingContext context) {
+    // Pattern Detector focuses on ATTACK VECTORS in streaming context
+    StringBuilder prompt = new StringBuilder();
+
+    prompt.append("You are an expert Fraud Pattern Detection specialist.\n\n");
+
+    // Emphasizing attack pattern detection, where it is Pattern Detector's specialty
+    prompt.append("STREAMING INTELLIGENCE - ATTACK VECTOR ANALYSIS:\n");
+    if (context.hasHighVelocity()) {
+      prompt.append(
+          String.format(
+              "ATTACK PATTERN DETECTED: %d rapid transactions\n",
+              context.recentTransactionsCount()));
+      prompt.append("Known attack vectors this matches:\n");
+      prompt.append("- Card Testing: Small amounts to test stolen cards\n");
+      prompt.append("- Credential Stuffing: Rapid automated login attempts\n");
+      prompt.append("- Account Takeover: Quick succession to drain account\n");
+      prompt.append("- Bot Attack: Automated fraud script\n");
+    } else {
+      prompt.append("Single transaction - analyze for standalone fraud patterns\n");
+    }
+    prompt.append("\n");
+
+    // Transaction pattern details
+    prompt.append("TRANSACTION PATTERN:\n");
+    prompt.append(transaction.toAnalysisText());
+    prompt.append("\n");
+
+    if (context.customerProfile() != null) {
+      CustomerProfile profile = context.customerProfile();
+      prompt.append("CUSTOMER PATTERN BASELINE:\n");
+      prompt.append(
+          String.format(
+              "- Typical amount: $%.2f\n", profile.averageTransactionAmount().doubleValue()));
+      prompt.append(
+          String.format(
+              "- Typical categories: %s\n", String.join(", ", profile.transactionCategories())));
+      prompt.append("\n");
+    }
+
+    prompt.append("As a PATTERN DETECTOR, focus on:\n");
+    prompt.append("1. Does the VELOCITY pattern match known attack vectors?\n");
+    prompt.append("2. Are there card testing indicators (small amounts)?\n");
+    prompt.append("3. Is this part of an automated fraud campaign?\n");
+    prompt.append("4. Do patterns match fraud rings or bot activity?\n\n");
+
+    prompt.append("Provide your analysis in this format:\n");
+    prompt.append("RISK_SCORE: [0.0-1.0]\n");
+    prompt.append("REASONING: [Attack pattern analysis]\n");
+    prompt.append("RECOMMENDATION: [Pattern-based fraud prevention]\n");
+
+    return prompt.toString();
   }
 
   @Override

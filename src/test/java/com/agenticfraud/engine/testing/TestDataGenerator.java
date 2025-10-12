@@ -144,7 +144,7 @@ public class TestDataGenerator {
    */
   private static void generateHighVelocityAttack(
       KafkaProducer<String, String> producer, CustomerProfile profile, int count) throws Exception {
-    System.out.println("Generating HIGH VELOCITY ATTACK (" + count + " rapid transactions)...");
+    System.out.println("Generating HIGH VELOCITY ATTACK (" + count + " rapid transactions)... for customer: " + profile.customerId());
     System.out.println("This will trigger streaming velocity intelligence!");
 
     for (int i = 0; i < count; i++) {

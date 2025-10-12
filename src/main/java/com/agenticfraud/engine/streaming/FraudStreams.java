@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
@@ -42,7 +41,8 @@ public class FraudStreams {
     // Configure JSON serdes
     JsonSerde<Transaction> transactionSerde = new JsonSerde<>(Transaction.class);
     JsonSerde<CustomerProfile> customerProfileSerde = new JsonSerde<>(CustomerProfile.class);
-    JsonSerde<FraudDecision> decisionJsonSerde = new JsonSerde<>(FraudDecision.class);
+    JsonSerde<EnrichedTransaction> enrichedTransactionJsonSerde =
+        new JsonSerde<>(EnrichedTransaction.class);
 
     // ================================
     // INPUT STREAMS
@@ -115,8 +115,7 @@ public class FraudStreams {
                   return new EnrichedTransaction(
                       enriched.transaction(), enriched.customerProfile(), velocity);
                 },
-                Joined.with(
-                    Serdes.String(), new JsonSerde<>(EnrichedTransaction.class), Serdes.Long()));
+                Joined.with(Serdes.String(), enrichedTransactionJsonSerde, Serdes.Long()));
 
     // ================================
     // STREAMING-INTELLIGENT ANALYSIS
@@ -151,7 +150,10 @@ public class FraudStreams {
                           : "normal amount");
                 }
 
-                // AI agents analyze transaction with streaming intelligence via context
+                // AI agents analyze transaction with streaming intelligence via context in 3 phases
+                // Phase 1: Streaming-Enhanced Parallel Analysis
+                // Phase 2: Agent Collaboration
+                // Phase 3: Intelligent Decision Synthesis
                 logger.info(
                     "Invoking AI-enhanced streaming intelligence context for transaction: {}", txn);
                 return agentCoordinator.investigateTransaction(txn, context);

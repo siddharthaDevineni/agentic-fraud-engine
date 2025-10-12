@@ -1,12 +1,16 @@
 package com.agenticfraud.engine.agents;
 
 import com.agenticfraud.engine.models.AgentInsight;
+import com.agenticfraud.engine.models.StreamingContext;
 import com.agenticfraud.engine.models.Transaction;
 
 public interface FraudAgent {
 
-  /** Analyze a transaction and provide insights */
+  /** Phase 1: Analyze transaction (simple analysis) */
   AgentInsight analyze(Transaction transaction);
+
+  /** Phase 1: Analyze transaction with streaming intelligence */
+  AgentInsight analyzeWithStreamingContext(Transaction transaction, StreamingContext context);
 
   /**
    * Get the agent's specialization area
@@ -22,7 +26,7 @@ public interface FraudAgent {
    */
   String getAgentId();
 
-  /** Collaborate with other agents on a decision */
+  /** Phase 2: Collaborate with other agents on a decision */
   AgentInsight collaborate(Transaction transaction, String question, Object... context);
 
   /**

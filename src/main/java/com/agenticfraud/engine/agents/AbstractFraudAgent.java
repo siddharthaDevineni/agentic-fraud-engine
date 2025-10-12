@@ -1,6 +1,7 @@
 package com.agenticfraud.engine.agents;
 
 import com.agenticfraud.engine.models.AgentInsight;
+import com.agenticfraud.engine.models.StreamingContext;
 import com.agenticfraud.engine.models.Transaction;
 import com.agenticfraud.engine.utils.AgenticFraudUtils;
 import java.util.Map;
@@ -51,6 +52,45 @@ public abstract class AbstractFraudAgent implements FraudAgent {
     }
   }
 
+  /** Phase 1: Individual analysis enhanced with streaming context */
+  @Override
+  public AgentInsight analyzeWithStreamingContext(
+      Transaction transaction, StreamingContext context) {
+    try {
+      logger.debug(
+          "{} analyzing transaction: {} with streaming context: {}",
+          getAgentId(),
+          transaction.transactionId(),
+          context.getAIContext());
+
+      // Each agent builds its own streaming-enhanced prompt
+      String prompt = buildStreamingAnalysisPrompt(transaction, context);
+      String analysis = chatModel.call(prompt);
+
+      double riskScore = AgenticFraudUtils.extractRiskScore(analysis);
+      String reasoning = AgenticFraudUtils.extractReasoning(analysis);
+      String recommendation = AgenticFraudUtils.extractRecommendation(analysis);
+
+      AgentInsight insight =
+          AgentInsight.create(
+              getSpecialization(), getAgentId(), analysis, riskScore, reasoning, recommendation);
+
+      logger.info(
+          "{} completed streaming analysis for {}: Risk={}, Confidence={}",
+          getAgentId(),
+          transaction.transactionId(),
+          riskScore,
+          insight.confidence());
+
+      return insight;
+
+    } catch (Exception e) {
+      logger.error("Error during streaming analysis by {}: {}", getAgentId(), e.getMessage());
+      return createErrorInsight(transaction, e);
+    }
+  }
+
+  /** Phase 2: Collaborate with other agents */
   @Override
   public AgentInsight collaborate(Transaction transaction, String question, Object... context) {
     try {
@@ -93,14 +133,26 @@ public abstract class AbstractFraudAgent implements FraudAgent {
   }
 
   // Abstract methods for specialization
+  // ================================
+  // ABSTRACT METHODS - Each agent must implement
+  // ================================
+  /** Build analysis prompt without streaming context (legacy/simple analysis) */
   protected abstract String buildAnalysisPrompt(Transaction transaction);
 
+  /**
+   * Build analysis prompt WITH streaming intelligence Each agent emphasizes different aspects of
+   * the streaming context
+   */
+  protected abstract String buildStreamingAnalysisPrompt(
+      Transaction transaction, StreamingContext context);
+
+  /** Initialize an agent-specific knowledge base */
   protected abstract void initializeKnowledge();
 
   // Helper methods
   protected String buildCollaborationPrompt(
       Transaction transaction, String question, Object... context) {
-      logger.info("Building collaboration prompt for {}: {}", getAgentId(), question);
+    logger.info("Building collaboration prompt for {}: {}", getAgentId(), question);
     return String.format(
         """
                         You are a %s fraud detection specialist.
