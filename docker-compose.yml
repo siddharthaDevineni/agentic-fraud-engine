@@ -16,6 +16,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - fraud-detection-network
 
   # Kafka Broker
   kafka:
@@ -45,6 +47,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+    networks:
+      - fraud-detection-network
 
   # Kafka UI - For visualization and debugging
   kafka-ui:
@@ -60,11 +64,23 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:8090"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080"]
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - fraud-detection-network
+
+  # Development container for Codespaces
+  app:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu
+    container_name: fraud-engine-dev
+    volumes:
+      - ../..:/workspace:cached
+    command: sleep infinity
+    networks:
+      - fraud-detection-network
 
 networks:
-  default:
+  fraud-detection-network:
     name: fraud-detection-network

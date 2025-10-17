@@ -9,6 +9,57 @@ Fraud detection system combining:
 - **Intelligent Routing** - Dynamic decision flows based on confidence
 - **Learning Loops** - Continuous improvement from analyst feedback
 
+---
+<Details>
+<summary>Table of Contents (Click to Expand)</summary>
+
+<!-- TOC -->
+  * [See It In Action (30-second demo)](#see-it-in-action-30-second-demo)
+  * [Quick Demo](#quick-demo)
+  * [The Problem](#the-problem)
+  * [The Solution: Streaming-Intelligent AI](#the-solution-streaming-intelligent-ai)
+    * [Architecture Overview](#architecture-overview)
+    * [How It Works:](#how-it-works)
+      * [1. Streaming Enrichment Layer](#1-streaming-enrichment-layer)
+      * [2️. Multi-Agent AI Layer](#2-multi-agent-ai-layer)
+      * [3.️ Intelligent Routing](#3-intelligent-routing)
+      * [4️. Learning Loop](#4-learning-loop)
+  * [Real Detection Examples](#real-detection-examples)
+    * [Example 1: High-Confidence Fraud Alert (99.4% confidence)](#example-1-high-confidence-fraud-alert-994-confidence)
+      * [Customer Profile](#customer-profile)
+      * [Transaction Summary](#transaction-summary)
+      * [AI Agent Analysis (5 agents + streaming intelligence)](#ai-agent-analysis-5-agents--streaming-intelligence)
+      * [Final Decision](#final-decision)
+      * [Why was This Auto-Blocked?](#why-was-this-auto-blocked)
+      * [Streaming Context Detected](#streaming-context-detected)
+    * [Example 2: Medium-Confidence Human Review (80% confidence)](#example-2-medium-confidence-human-review-80-confidence)
+      * [Transaction Summary](#transaction-summary-1)
+      * [Streaming Context Detected](#streaming-context-detected-1)
+      * [AI Agent Analysis](#ai-agent-analysis)
+      * [Final Decision](#final-decision-1)
+      * [Why This Needs Human Review](#why-this-needs-human-review)
+    * [Example 3: Low-Risk Approved Transaction (91% confidence)](#example-3-low-risk-approved-transaction-91-confidence)
+      * [Transaction Summary](#transaction-summary-2)
+      * [Streaming Context](#streaming-context)
+      * [AI Agent Consensus](#ai-agent-consensus)
+      * [Final Decision](#final-decision-2)
+      * [Why This Was Auto-Approved](#why-this-was-auto-approved)
+  * [Intelligent Routing Summary](#intelligent-routing-summary)
+    * [Key Takeaways](#key-takeaways)
+  * [Kafka UI screenshot example](#kafka-ui-screenshot-example)
+  * [Try it yourself](#try-it-yourself)
+      * [1. Start Kafka infrastructure](#1-start-kafka-infrastructure)
+      * [2. Create topics](#2-create-topics)
+      * [3. Configure API key in src/main/resources/application.yml](#3-configure-api-key-in-srcmainresourcesapplicationyml)
+      * [4. Run application](#4-run-application)
+      * [5. Generate test data](#5-generate-test-data)
+  * [Tech Stack](#tech-stack)
+  * [Future Enhancements](#future-enhancements)
+  * [License](#license)
+<!-- TOC -->
+
+</Details>
+
 [Demo Video] [Architecture] [Live Demo] [Blog Post]
 
 <img src="demo.gif" width="800" alt="Real-time fraud detection in action"/>
@@ -16,6 +67,28 @@ Fraud detection system combining:
 ## See It In Action (30-second demo)
 
 Watch 5 AI agents detect a high-velocity attack in real-time with Kafka streaming context.
+
+---
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/YOUR-USERNAME/agentic-fraud-engine?quickstart=1)
+
+> **Try it now:** Click the button above for a one-click cloud demo (no installation required!)
+
+---
+
+## Quick Demo
+
+**Never used Codespaces before?** Here's what happens:
+
+1. Click "Open in Codespaces" → Cloud environment starts (90 seconds)
+2. Kafka + Spring Boot infrastructure starts automatically
+3. Set API key: `export GROQ_API_KEY='your-key'` ([Get key](https://console.groq.com/keys))
+4. Run: `mvn spring-boot:run`
+5. Run [TestaDataGenerator](./src/test/java/com/agenticfraud/engine/testing/TestDataGenerator.java): See AI detect fraud in real-time!
+
+**Detailed instructions:** See [CODESPACES.md](.devcontainer/CODESPACES.md)
+
+---
 
 ## The Problem
 
@@ -33,6 +106,8 @@ Traditional fraud detection systems are **blind**:
 
 - → Result: **Card testing attack detected!**
 
+---
+
 ## The Solution: Streaming-Intelligent AI
 
 This system combines **Kafka Streams real-time context** with **Multi-Agent AI** to make fraud detection smarter.
@@ -43,13 +118,17 @@ This system combines **Kafka Streams real-time context** with **Multi-Agent AI**
 - Customer profile context → Spot unusual amounts instantly
 - Real-time collaboration → Agents debate suspicious patterns
 
+---
+
 ### Architecture Overview
 
 <img src="docs/architecture_agentic_fraud.png" width="1200" alt="Streaming-Intelligent Architecture"/>
 
+---
+
 ### How It Works:
 
-#### 1. **Streaming Enrichment Layer**
+#### 1. Streaming Enrichment Layer
 
 Every transaction gets enriched with real-time context before AI analysis:
 
@@ -119,6 +198,7 @@ public void updateKnowledge(String transactionId, boolean actualFraud, String fe
 // Future: Retrain models with feedback
 }
 ````
+---
 
 ## Real Detection Examples
 
@@ -206,7 +286,7 @@ After agents debated findings:
 }
 ``````
 
-Why This Was Auto-Blocked?
+#### Why was This Auto-Blocked?
 
 **Clear Attack Indicators:**
 
@@ -497,6 +577,8 @@ This demonstrates **responsible AI**:
 
 The streaming intelligence (velocity, customer baseline, location context) is what enables these nuanced decisions.
 
+---
+
 ## Kafka UI screenshot example
 
 Here is an example of the Kafka UI showing the three topics: `fraud-alerts, human-review, and approved-transactions`.
@@ -512,7 +594,9 @@ generate the explanation, also it gets expensive as the cost increases on the to
 actually use `llama` locally installed on our machine (http://localhost:11434) instead of an LLM on a cloud server. This will make the explanation
 process much faster, and it is also free.
 
-### Try it yourself
+---
+
+## Try it yourself
 
 - `git clone https://github.com/your-repo/agentic-fraud-engine`
 - `cd agentic-fraud-engine`
@@ -525,9 +609,7 @@ process much faster, and it is also free.
 
 `./setup-topics.sh`
 
-#### 3. Configure API key
-
-#### Edit src/main/resources/application.yml
+#### 3. Configure API key in src/main/resources/application.yml
 
 `spring.ai.openai.api-key:` your-groq-api-key
 
@@ -547,7 +629,9 @@ Choose a scenario:
 4. Mixed scenario
 5. Continuous stream
 
-### Tech Stack
+---
+
+## Tech Stack
 
 - Java 21
 - Spring Boot 3.4
@@ -556,7 +640,9 @@ Choose a scenario:
 - Groq/Llama 3.1 - Fast inference
 - Docker Compose - Local infrastructure
 
-### Future Enhancements
+---
+
+## Future Enhancements
 
 - Add Grafana dashboard for real-time metrics
 - Implement model retraining from feedback
@@ -564,7 +650,7 @@ Choose a scenario:
 - Deploy to Kubernetes with Strimzi
 - A/B testing framework for agent improvements
 
-### License
+## License
 
 MIT License - feel free to use this for learning!
 

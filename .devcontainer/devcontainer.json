@@ -1,0 +1,64 @@
+{
+  "name": "Agentic Fraud Engine - Kafka + Spring AI",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21",
+      "installMaven": "true"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "20.10",
+      "dockerDashComposeVersion": "v2"
+    }
+  },
+
+  "forwardPorts": [8080, 8090, 9092, 2181],
+  "portsAttributes": {
+    "8080": {
+      "label": "Spring Boot App",
+      "onAutoForward": "notify",
+      "protocol": "http"
+    },
+    "8090": {
+      "label": "Kafka UI",
+      "onAutoForward": "openBrowser",
+      "protocol": "http"
+    },
+    "9092": {
+      "label": "Kafka Broker",
+      "onAutoForward": "silent"
+    },
+    "2181": {
+      "label": "Zookeeper",
+      "onAutoForward": "silent"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "pivotal.vscode-spring-boot",
+        "vscjava.vscode-maven",
+        "redhat.java"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.server.launchMode": "Standard",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+
+  "remoteUser": "vscode",
+
+  "mounts": [
+    "source=${localWorkspaceFolder}/.m2,target=/home/vscode/.m2,type=bind,consistency=cached"
+  ]
+}

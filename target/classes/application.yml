@@ -46,6 +46,6 @@ management:
 # Logging
 logging:
   level:
-    com.agenticfraud: DEBUG
-    org.springframework.ai: DEBUG
+    com.agenticfraud: INFO
+    org.springframework.ai: INFO
     org.apache.kafka: INFO
