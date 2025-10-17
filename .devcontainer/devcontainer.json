@@ -1,14 +1,17 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/java
 {
   "name": "Agentic Fraud Engine - Kafka + Spring AI",
 
-  "image": "mcr.microsoft.com/devcontainers/java:21",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
 
   "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21",
+      "installMaven": "true",
+      "installGradle": "false"
+    },
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "version": "latest",
-      "moby": true
+      "enableNonRootDocker": "true"
     }
   },
 
@@ -17,12 +20,10 @@
       "extensions": [
         "vscjava.vscode-java-pack",
         "pivotal.vscode-spring-boot",
-        "vscjava.vscode-maven",
-        "redhat.java"
+        "vscjava.vscode-maven"
       ],
       "settings": {
-        "java.configuration.updateBuildConfiguration": "automatic",
-        "java.server.launchMode": "Standard"
+        "java.configuration.updateBuildConfiguration": "automatic"
       }
     }
   },
@@ -47,9 +48,5 @@
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "postStartCommand": "bash .devcontainer/post-start.sh",
 
-  "remoteUser": "vscode",
-
-  "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
-  ]
+  "remoteUser": "vscode"
 }
