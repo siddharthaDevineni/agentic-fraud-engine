@@ -1,39 +1,14 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/java
 {
   "name": "Agentic Fraud Engine - Kafka + Spring AI",
-  "dockerComposeFile": "../docker-compose.yml",
-  "service": "app",
-  "workspaceFolder": "/workspace",
+
+  "image": "mcr.microsoft.com/devcontainers/java:21",
 
   "features": {
-    "ghcr.io/devcontainers/features/java:1": {
-      "version": "21",
-      "installMaven": "true"
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "20.10",
-      "dockerDashComposeVersion": "v2"
-    }
-  },
-
-  "forwardPorts": [8080, 8090, 9092, 2181],
-  "portsAttributes": {
-    "8080": {
-      "label": "Spring Boot App",
-      "onAutoForward": "notify",
-      "protocol": "http"
-    },
-    "8090": {
-      "label": "Kafka UI",
-      "onAutoForward": "openBrowser",
-      "protocol": "http"
-    },
-    "9092": {
-      "label": "Kafka Broker",
-      "onAutoForward": "silent"
-    },
-    "2181": {
-      "label": "Zookeeper",
-      "onAutoForward": "silent"
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "moby": true
     }
   },
 
@@ -47,9 +22,25 @@
       ],
       "settings": {
         "java.configuration.updateBuildConfiguration": "automatic",
-        "java.server.launchMode": "Standard",
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "java.server.launchMode": "Standard"
       }
+    }
+  },
+
+  "forwardPorts": [8080, 8090, 9092],
+
+  "portsAttributes": {
+    "8080": {
+      "label": "Spring Boot API",
+      "onAutoForward": "notify"
+    },
+    "8090": {
+      "label": "Kafka UI",
+      "onAutoForward": "openBrowser"
+    },
+    "9092": {
+      "label": "Kafka Broker",
+      "onAutoForward": "silent"
     }
   },
 
@@ -59,6 +50,6 @@
   "remoteUser": "vscode",
 
   "mounts": [
-    "source=${localWorkspaceFolder}/.m2,target=/home/vscode/.m2,type=bind,consistency=cached"
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ]
 }

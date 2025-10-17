@@ -70,7 +70,7 @@ Watch 5 AI agents detect a high-velocity attack in real-time with Kafka streamin
 
 ---
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/YOUR-USERNAME/agentic-fraud-engine?quickstart=1)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/siddharthaDevineni/agentic-fraud-engine?quickstart=1)
 
 > **Try it now:** Click the button above for a one-click cloud demo (no installation required!)
 
