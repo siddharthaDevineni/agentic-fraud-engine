@@ -13,36 +13,56 @@ if ! docker info > /dev/null 2>&1; then
   sleep 5
 fi
 
-# Stop any existing containers
+# Stop any existing containers and remove volumes
 echo "Cleaning up any existing containers..."
 docker-compose down -v 2>/dev/null || true
 
 # Start Kafka infrastructure
-echo "Starting Docker containers (Kafka, Kafka UI)..."
+echo "Starting Kafka + Kafka UI..."
 docker-compose up -d
 
-# Wait for Kafka to be ready
-echo "Waiting for Kafka to be ready..."
+echo ""
+echo "Waiting for containers to be healthy..."
 echo "   (This takes about 30-40 seconds)"
+echo ""
 
+# Wait with better feedback
 MAX_WAIT=90
 WAITED=0
 
-while ! docker exec kafka kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1; do
-  if [ $WAITED -ge $MAX_WAIT ]; then
+while [ $WAITED -lt $MAX_WAIT ]; do
+  # Check if kafka is healthy
+  if docker exec kafka kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1; then
     echo ""
-    echo "Kafka failed to start within $MAX_WAIT seconds"
-    echo "   Try running: docker-compose logs kafka"
+    echo "Kafka is ready!"
+    break
+  fi
+
+  # Check if kafka container exited
+  if ! docker ps | grep -q kafka; then
+    echo ""
+    echo "Kafka container stopped unexpectedly!"
+    echo ""
+    echo "Checking Kafka logs:"
+    docker-compose logs kafka | tail -20
+    echo ""
+    echo "Try running: docker-compose up -d && docker-compose logs -f"
     exit 1
   fi
 
   echo -n "."
-  sleep 2
-  WAITED=$((WAITED + 2))
+  sleep 3
+  WAITED=$((WAITED + 3))
 done
 
-echo ""
-echo "Kafka is ready!"
+if [ $WAITED -ge $MAX_WAIT ]; then
+  echo ""
+  echo "Kafka failed to start within $MAX_WAIT seconds"
+  echo ""
+  echo "Checking logs:"
+  docker-compose logs kafka | tail -30
+  exit 1
+fi
 
 # Create topics
 echo ""
@@ -63,7 +83,7 @@ echo "NEXT STEPS:"
 echo ""
 echo "1️  Set your Groq API key (required):"
 echo "    export GROQ_API_KEY='gsk_your_key_here'"
-echo "    👉 Get key: https://console.groq.com/keys"
+echo "    👉 Get free key: https://console.groq.com/keys"
 echo ""
 echo "2️  Start the Spring Boot application:"
 echo "    mvn spring-boot:run"
@@ -73,10 +93,9 @@ echo "    mvn test-compile exec:java \\"
 echo "      -Dexec.mainClass=\"com.agenticfraud.engine.testing.TestDataGenerator\""
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "USEFUL LINKS:"
+echo " USEFUL LINKS:"
 echo ""
 echo "   Kafka UI:     http://localhost:8090"
 echo "   Spring Boot:  http://localhost:8080"
-echo "   Health:       http://localhost:8080/api/fraud-detection/health"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

@@ -28,7 +28,7 @@
     }
   },
 
-  "forwardPorts": [8080, 8090, 9092],
+  "forwardPorts": [8080, 8090, 9092, 2181],
 
   "portsAttributes": {
     "8080": {
@@ -41,6 +41,10 @@
     },
     "9092": {
       "label": "Kafka Broker",
+      "onAutoForward": "silent"
+    },
+    "2181": {
+      "label": "Zookeeper",
       "onAutoForward": "silent"
     }
   },

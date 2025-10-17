@@ -35,7 +35,7 @@ docker-compose --version
 
 # Download Maven dependencies
 echo ""
-echo "🔨 Downloading dependencies..."
+echo "Downloading dependencies..."
 echo "   (This may take 2-3 minutes on first run)"
 mvn dependency:resolve -q 2>/dev/null || mvn dependency:resolve
 
