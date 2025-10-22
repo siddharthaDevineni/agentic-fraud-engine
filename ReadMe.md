@@ -10,67 +10,69 @@ Fraud detection system combining:
 - **Learning Loops** - Continuous improvement from analyst feedback
 
 ---
+## See It In Action
+
+Watch 5 AI agents detect a high-velocity attack in real-time with Kafka streaming context.
+
+![Demo video](docs/demo_video_with_captions-gif.gif)
+>Shows: Kafka streams processing → AI agents analyzing → Fraud detection (90% confidence)
+
+Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
+---
 <Details>
 <summary>Table of Contents (Click to Expand)</summary>
 
 <!-- TOC -->
-
-* [See It In Action (30-second demo)](#see-it-in-action-30-second-demo)
-* [Quick Demo](#quick-demo)
-* [The Problem](#the-problem)
-* [The Solution: Streaming-Intelligent AI](#the-solution-streaming-intelligent-ai)
+  * [See It In Action](#see-it-in-action)
+  * [Watch the full video on YouTube here](#watch-the-full-video-on-youtube-here)
+  * [Quick Demo](#quick-demo)
+  * [The Problem](#the-problem)
+  * [The Solution: Streaming-Intelligent AI](#the-solution-streaming-intelligent-ai)
     * [Architecture Overview](#architecture-overview)
     * [How It Works:](#how-it-works)
-        * [1. Streaming Enrichment Layer](#1-streaming-enrichment-layer)
-        * [2️. Multi-Agent AI Layer](#2-multi-agent-ai-layer)
-        * [3.️ Intelligent Routing](#3-intelligent-routing)
-        * [4️. Learning Loop](#4-learning-loop)
-* [Real Detection Examples](#real-detection-examples)
+      * [1. Streaming Enrichment Layer](#1-streaming-enrichment-layer)
+      * [2️. Multi-Agent AI Layer](#2-multi-agent-ai-layer)
+      * [3.️ Intelligent Routing](#3-intelligent-routing)
+      * [4️. Learning Loop](#4-learning-loop)
+  * [Real Detection Examples](#real-detection-examples)
     * [Example 1: High-Confidence Fraud Alert (99.4% confidence)](#example-1-high-confidence-fraud-alert-994-confidence)
-        * [Customer Profile](#customer-profile)
-        * [Transaction Summary](#transaction-summary)
-        * [AI Agent Analysis (5 agents + streaming intelligence)](#ai-agent-analysis-5-agents--streaming-intelligence)
-        * [Final Decision](#final-decision)
-        * [Why was This Auto-Blocked?](#why-was-this-auto-blocked)
-        * [Streaming Context Detected](#streaming-context-detected)
+      * [Customer Profile](#customer-profile)
+      * [Transaction Summary](#transaction-summary)
+      * [AI Agent Analysis (5 agents + streaming intelligence)](#ai-agent-analysis-5-agents--streaming-intelligence)
+      * [Final Decision](#final-decision)
+      * [Why was This Auto-Blocked?](#why-was-this-auto-blocked)
+      * [Streaming Context Detected](#streaming-context-detected)
     * [Example 2: Medium-Confidence Human Review (80% confidence)](#example-2-medium-confidence-human-review-80-confidence)
-        * [Transaction Summary](#transaction-summary-1)
-        * [Streaming Context Detected](#streaming-context-detected-1)
-        * [AI Agent Analysis](#ai-agent-analysis)
-        * [Final Decision](#final-decision-1)
-        * [Why This Needs Human Review](#why-this-needs-human-review)
+      * [Transaction Summary](#transaction-summary-1)
+      * [Streaming Context Detected](#streaming-context-detected-1)
+      * [AI Agent Analysis](#ai-agent-analysis)
+      * [Final Decision](#final-decision-1)
+      * [Why This Needs Human Review](#why-this-needs-human-review)
     * [Example 3: Low-Risk Approved Transaction (91% confidence)](#example-3-low-risk-approved-transaction-91-confidence)
-        * [Transaction Summary](#transaction-summary-2)
-        * [Streaming Context](#streaming-context)
-        * [AI Agent Consensus](#ai-agent-consensus)
-        * [Final Decision](#final-decision-2)
-        * [Why This Was Auto-Approved](#why-this-was-auto-approved)
-* [Intelligent Routing Summary](#intelligent-routing-summary)
+      * [Transaction Summary](#transaction-summary-2)
+      * [Streaming Context](#streaming-context)
+      * [AI Agent Consensus](#ai-agent-consensus)
+      * [Final Decision](#final-decision-2)
+      * [Why This Was Auto-Approved](#why-this-was-auto-approved)
+  * [Intelligent Routing Summary](#intelligent-routing-summary)
     * [Key Takeaways](#key-takeaways)
-* [Kafka UI screenshot example](#kafka-ui-screenshot-example)
-* [Try it yourself](#try-it-yourself)
-    * [1. Start Kafka infrastructure](#1-start-kafka-infrastructure)
-    * [2. Create topics](#2-create-topics)
-    * [3. Configure API key in src/main/resources/application.yml](#3-configure-api-key-in-srcmainresourcesapplicationyml)
-    * [4. Run application](#4-run-application)
-    * [5. Generate test data](#5-generate-test-data)
-* [Tech Stack](#tech-stack)
-* [Future Enhancements](#future-enhancements)
-* [License](#license)
-
+  * [Kafka UI screenshot example](#kafka-ui-screenshot-example)
+  * [Try it yourself](#try-it-yourself)
+      * [1. Start Kafka infrastructure](#1-start-kafka-infrastructure)
+      * [2. Create topics](#2-create-topics)
+      * [3. Configure API key in src/main/resources/application.yml](#3-configure-api-key-in-srcmainresourcesapplicationyml)
+      * [4. Run application](#4-run-application)
+      * [5. Generate test data](#5-generate-test-data)
+  * [Tech Stack](#tech-stack)
+  * [Future Enhancements](#future-enhancements)
+  * [License](#license)
 <!-- TOC -->
 
 </Details>
 
-[Demo Video] [Architecture] [Live Demo] [Blog Post]
-
-<img src="demo.gif" width="800" alt="Real-time fraud detection in action"/>
-
-## See It In Action (30-second demo)
-
-Watch 5 AI agents detect a high-velocity attack in real-time with Kafka streaming context.
-
 ---
+
+
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/siddharthaDevineni/agentic-fraud-engine?quickstart=1)
 
@@ -84,7 +86,7 @@ Watch 5 AI agents detect a high-velocity attack in real-time with Kafka streamin
 
 1. Click "Open in Codespaces" → Cloud environment starts (90 seconds)
 2. Kafka + Spring Boot infrastructure starts automatically
-3. Set API key: `export GROQ_API_KEY='your-key'` ([Get key](https://console.groq.com/keys))
+3. Set API key: `export GROQ_API_KEY='your-key'` ([Get key](https://console.groq.com/keys)) or better install llama for free
 4. Run: `mvn spring-boot:run`
 5. Run [TestaDataGenerator](./src/test/java/com/agenticfraud/engine/testing/TestDataGenerator.java): See AI detect fraud
    in real-time!
@@ -137,17 +139,13 @@ Every transaction gets enriched with real-time context before AI analysis:
 
 ```java
 // Traditional approach: Transaction alone
-Transaction txn = {amount:$2500,merchant:"Online Store"}
+Transaction txn = {amount: $2500, merchant: "Online Store"}
 
 // This approach: Streaming-enriched transaction
-EnrichedTransaction ={
-transaction:{amount:$2500,merchant:"Online Store"},
-customerProfile:{averageAmount:$50,riskLevel:"HIGH"},
-velocity:15
-transactions in
-last 5minutes  →
-Kafka Streams
-intelligence
+EnrichedTransaction = {
+transaction: {amount:$2500,merchant:"Online Store"},
+customerProfile: {averageAmount:$50,riskLevel:"HIGH"},
+velocity: 15 transactions in last 5 minutes → Kafka Streams intelligence
 }
 ````
 
@@ -155,9 +153,7 @@ intelligence
 
 ````java  
 .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(5)))
-        .
-
-count()
+.count()
 ````
 
 3-Way Join: Transaction + Customer Profile + Velocity Context  
@@ -188,13 +184,13 @@ Kafka Streams `.split()` + `.branch()` dynamically routes by confidence:
 
 ````java
 // Route 1: High-confidence fraud → Immediate alert
-isFraudulent &&confidence >0.8 →fraud-alerts
+isFraudulent && confidence > 0.8 → fraud-alerts
 
 // Route 2: Uncertain → Human analyst
-isFraudulent ||requiresReview →human-review
+isFraudulent || requiresReview → human-review
 
 // Route 3: Legitimate → Auto-approve
-!isFraudulent →approved-transactions
+!isFraudulent → approved-transactions
 ````
 
 #### 4️. Learning Loop

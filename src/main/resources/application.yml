@@ -8,7 +8,7 @@ spring:
   # Spring AI Configuration
   ai:
     openai:
-      api-key: your-api-key
+      api-key: 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
       base-url: https://api.groq.com/openai
       chat:
         options:
@@ -46,6 +46,6 @@ management:
 # Logging
 logging:
   level:
-    com.agenticfraud: DEBUG
-    org.springframework.ai: DEBUG
+    com.agenticfraud: INFO
+    org.springframework.ai: INFO
     org.apache.kafka: INFO

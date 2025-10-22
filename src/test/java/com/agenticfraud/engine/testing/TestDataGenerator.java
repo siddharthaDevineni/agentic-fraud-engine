@@ -30,7 +30,7 @@ public class TestDataGenerator {
 
     // Generate customer profiles first
     System.out.println("Generating Customer Profiles...");
-    List<CustomerProfile> customerProfiles = generateCustomerProfiles(5);
+    List<CustomerProfile> customerProfiles = generateCustomerProfiles(2);
     sendCustomerProfiles(producer, customerProfiles);
 
     System.out.println("Generating Test Transactions...");
