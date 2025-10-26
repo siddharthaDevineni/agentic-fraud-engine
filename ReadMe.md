@@ -86,8 +86,6 @@ Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
 
 ---
 
-
-
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/siddharthaDevineni/agentic-fraud-engine?quickstart=1)
 
 > **Try it now:** Click the button above for a one-click cloud demo (no installation required!)
@@ -106,6 +104,9 @@ Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
    in real-time!
 
 **Detailed instructions:** See [CODESPACES.md](.devcontainer/CODESPACES.md)
+
+---
+[![Read full story on Medium](https://img.shields.io/badge/📖_Read_on-Medium-black?style=flat&logo=medium)](https://medium.com/@siddhartha.devineni/kafka-streams-make-ai-agents-fraud-detection-smarter-55fce4d6be3a)
 
 ---
 
