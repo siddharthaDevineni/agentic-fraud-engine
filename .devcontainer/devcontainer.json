@@ -1,5 +1,5 @@
 {
-  "name": "Agentic Fraud Engine - Kafka + Spring AI",
+  "name": "Agentic Fraud Engine - Kafka + Spring AI (Local LLM)",
 
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
 
@@ -28,7 +28,7 @@
     }
   },
 
-  "forwardPorts": [8080, 8090, 9092, 2181],
+  "forwardPorts": [8080, 8090, 9092, 2181, 11434],
 
   "portsAttributes": {
     "8080": {
@@ -45,6 +45,10 @@
     },
     "2181": {
       "label": "Zookeeper",
+      "onAutoForward": "silent"
+    },
+    "11434": {
+      "label": "Ollama API",
       "onAutoForward": "silent"
     }
   },

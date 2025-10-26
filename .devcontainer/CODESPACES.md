@@ -3,12 +3,12 @@
 ## Quick Start (2 minutes)
 
 1. **Click the Codespaces button** in the README
-2. **Wait ~90 seconds** for environment to start
-3. **Set your API key** (required):
-```bash
-   export GROQ_API_KEY='your-key-here'
-```
-4. **Start the app**:
+2. **Wait for setup** (~2 minutes):
+    - Ollama installs
+    - Llama 3.1 8B downloads (4.7 GB)
+    - Kafka starts
+    - `codespaces` profile auto-activated  
+3. **Start the app**:
 ```bash
    mvn spring-boot:run
 ```
@@ -147,17 +147,42 @@ docker-compose down
 docker-compose up -d
 ```
 
-### "API key not set"
+### "Using OpenAI configuration but no API key"
+
+This means the app is trying to use Groq but profile isn't set:
 ```bash
-# Check if set
-echo $GROQ_API_KEY
+# Check active profile
+echo $SPRING_PROFILES_ACTIVE
 
-# Set it
-export GROQ_API_KEY='your-key-here'
+# Should be output: codespaces
 
-# Make it permanent (current session)
-echo "export GROQ_API_KEY='your-key-here'" >> ~/.bashrc
-source ~/.bashrc
+# If empty, set it:
+export SPRING_PROFILES_ACTIVE=codespaces
+```
+
+### "Ollama not responding"
+```bash
+# Check Ollama status
+curl http://localhost:11434/api/tags
+
+# Restart if needed
+pkill ollama
+ollama serve &
+
+# Wait 5 seconds
+sleep 5
+```
+
+### "Model not found"
+```bash
+# Re-download
+ollama pull llama3.1:8b
+
+# Verify
+ollama list
+```
+
+---
 ```
 
 ### "Maven build errors"
@@ -183,7 +208,7 @@ docker-compose logs -f
 
 ## Stopping Everything
 ```bash
-# Stop Spring Boot: Ctrl+C in Terminal 1
+# Stop Spring Boot: Ctrl+C in Terminal
 
 # Stop Kafka infrastructure
 docker-compose down

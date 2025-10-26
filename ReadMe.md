@@ -2,6 +2,9 @@ Agentic Fraud Engine
 
 > **Intelligent Fraud Detection where AI Agents get Smarter with Kafka Streaming Context**
 
+This is an **Agentic Fraud Detection Engine** that combines multi-agent AI with Kafka Streams real-time intelligence. The system uses 5 specialized AI agents working in parallel to detect fraud patterns enhanced by streaming context (velocity, customer profiles, location data).
+
+**Key Innovation**: Kafka streams enrich AI agents with real-time context before analysis, making decisions smarter than traditional isolated transaction analysis.
 Fraud detection system combining:
 
 - **Multi-Agent AI** - 5 specialized fraud detection agents collaboration
@@ -25,15 +28,17 @@ Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
 <!-- TOC -->
   * [See It In Action](#see-it-in-action)
   * [Watch the full video on YouTube here](#watch-the-full-video-on-youtube-here)
-  * [Quick Demo](#quick-demo)
+  * [Option 1: Github Codespaces for Quick Demo](#option-1-github-codespaces-for-quick-demo)
   * [The Problem](#the-problem)
   * [The Solution: Streaming-Intelligent AI](#the-solution-streaming-intelligent-ai)
     * [Architecture Overview](#architecture-overview)
     * [How It Works:](#how-it-works)
-      * [1. Streaming Enrichment Layer](#1-streaming-enrichment-layer)
-      * [2️. Multi-Agent AI Layer](#2-multi-agent-ai-layer)
+      * [1. Streaming Enrichment Layer (`FraudStreams.java`)](#1-streaming-enrichment-layer-fraudstreamsjava)
+      * [2️. Multi-Agent AI Layer (`AgentCoordinator.java` + 5 agents)](#2-multi-agent-ai-layer-agentcoordinatorjava--5-agents)
       * [3.️ Intelligent Routing](#3-intelligent-routing)
       * [4️. Learning Loop](#4-learning-loop)
+      * [Key Data Models](#key-data-models)
+      * [Decision Thresholds](#decision-thresholds)
   * [Real Detection Examples](#real-detection-examples)
     * [Example 1: High-Confidence Fraud Alert (99.4% confidence)](#example-1-high-confidence-fraud-alert-994-confidence)
       * [Customer Profile](#customer-profile)
@@ -57,12 +62,21 @@ Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
   * [Intelligent Routing Summary](#intelligent-routing-summary)
     * [Key Takeaways](#key-takeaways)
   * [Kafka UI screenshot example](#kafka-ui-screenshot-example)
-  * [Try it yourself](#try-it-yourself)
+  * [Important Configuration](#important-configuration)
+    * [LLM Configuration](#llm-configuration)
+    * [Kafka Streams Configuration](#kafka-streams-configuration)
+  * [Agent Prompt Engineering](#agent-prompt-engineering)
+  * [Development Patterns](#development-patterns)
+    * [Adding a New Agent](#adding-a-new-agent)
+    * [Modifying Streaming Context](#modifying-streaming-context)
+    * [Changing Routing Logic](#changing-routing-logic)
+  * [Option 2: Try it yourself for local development](#option-2-try-it-yourself-for-local-development)
       * [1. Start Kafka infrastructure](#1-start-kafka-infrastructure)
-      * [2. Create topics](#2-create-topics)
+      * [2. Start Kafka](#2-start-kafka)
       * [3. Configure API key in src/main/resources/application.yml](#3-configure-api-key-in-srcmainresourcesapplicationyml)
       * [4. Run application](#4-run-application)
       * [5. Generate test data](#5-generate-test-data)
+  * [Kafka Topics](#kafka-topics)
   * [Tech Stack](#tech-stack)
   * [Future Enhancements](#future-enhancements)
   * [License](#license)
@@ -80,14 +94,14 @@ Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
 
 ---
 
-## Quick Demo
+## Option 1: Github Codespaces for Quick Demo
 
 **Never used Codespaces before?** Here's what happens:
 
 1. Click "Open in Codespaces" → Cloud environment starts (90 seconds)
 2. Kafka + Spring Boot infrastructure starts automatically
-3. Set API key: `export GROQ_API_KEY='your-key'` ([Get key](https://console.groq.com/keys)) or better install llama for free
-4. Run: `mvn spring-boot:run`
+3. Wait ~2 minutes for setup (Ollama + Llama 3.1 download)
+4. Run: `mvn spring-boot:run` (automatically uses local LLM)
 5. Run [TestaDataGenerator](./src/test/java/com/agenticfraud/engine/testing/TestDataGenerator.java): See AI detect fraud
    in real-time!
 
@@ -132,8 +146,9 @@ This system combines **Kafka Streams real-time context** with **Multi-Agent AI**
 ---
 
 ### How It Works:
+Three-Layer Processing Pipeline:
 
-#### 1. Streaming Enrichment Layer
+#### 1. Streaming Enrichment Layer (`FraudStreams.java`)
 
 Every transaction gets enriched with real-time context before AI analysis:
 
@@ -151,6 +166,8 @@ velocity: 15 transactions in last 5 minutes → Kafka Streams intelligence
 
 **Velocity Calculation:** Kafka Streams tumbling windows (5-minute)
 
+High velocity threshold: 3+ transactions in 5 minutes (triggers collaboration in `AgentCoordinator.java`)
+
 ````java  
 .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(5)))
 .count()
@@ -159,9 +176,12 @@ velocity: 15 transactions in last 5 minutes → Kafka Streams intelligence
 3-Way Join: Transaction + Customer Profile + Velocity Context  
 State Store: KTable maintains current velocity per customer
 
-#### 2️. Multi-Agent AI Layer
+#### 2️. Multi-Agent AI Layer (`AgentCoordinator.java` + 5 agents)
+- **Phase 1**: Parallel streaming-enhanced analysis by all 5 agents
+- **Phase 2**: Agent collaboration when high disagreement or high velocity detected
+- **Phase 3**: Final decision synthesis with streaming intelligence bonus
 
-5 specialized AI agents analyze in parallel using CompletableFuture:
+The 5 specialized AI agents analyze in parallel using CompletableFuture:
 
 | Agent              | Specialization       | Weight | Example Insight             |
 |--------------------|----------------------|--------|-----------------------------|
@@ -171,7 +191,7 @@ State Store: KTable maintains current velocity per customer
 | Geographic Analyst | Location risks       | 1.0x   | Location jump: 500 miles/1h |
 | Temporal Analyst   | Timing patterns      | 1.0x   | Sub-second intervals = bot  |
 
-Key Innovation: Each agent receives streaming context in their prompt:  
+Each agent receives streaming **context** in their **prompt**:  
 "STREAMING INTELLIGENCE: 15 transactions in 5 minutes (HIGH VELOCITY)
 Customer baseline: `$50` average, HIGH risk level  
 Transaction: $2500 at online merchant
@@ -203,6 +223,20 @@ public void updateKnowledge(String transactionId, boolean actualFraud, String fe
 // Future: Retrain models with feedback
 }
 ````
+#### Key Data Models
+
+- `Transaction` - Base transaction record
+- `CustomerProfile` - Baseline customer behavior (average amount, risk level, categories)
+- `StreamingContext` - Real-time enrichment (velocity count, customer profile)
+- `EnrichedTransaction` - Transaction + CustomerProfile + velocity count
+- `AgentInsight` - Individual agent analysis result
+- `FraudDecision` - Final decision with all agent insights
+
+#### Decision Thresholds
+
+- Fraud threshold: `finalRiskScore >= 0.6`
+- High confidence routing: `confidence > 0.8`
+- Agent collaboration triggered: risk score variance > 0.4
 
 ---
 
@@ -604,22 +638,100 @@ process much faster, and it is also free.
 
 ---
 
-## Try it yourself
+## Important Configuration
 
-- `git clone https://github.com/your-repo/agentic-fraud-engine`
+### LLM Configuration
+
+The system supports two modes (configured in `application.yml` or `application-codespaces.yml`):
+
+1. **Groq API** (default): Fast cloud inference
+    - Requires `spring.ai.openai.api-key` environment variable
+    - Uses `llama-3.1-8b-instant` model
+    - Base URL: `https://api.groq.com/openai`
+
+2. **Local Ollama** (Codespaces): Free local LLM
+    - Activated with `SPRING_PROFILES_ACTIVE=codespaces`
+    - Uses `http://localhost:11434`
+    - Model: `llama3.1:8b`
+
+### Kafka Streams Configuration
+
+- Application ID: `intelligent-fraud-detection`
+- Bootstrap servers: `localhost:9092`
+- Processing guarantee: `EXACTLY_ONCE_V2`
+- Stream threads: 4
+- Velocity window: 5 minutes (no grace period)
+
+---
+
+## Agent Prompt Engineering
+
+Each agent has two prompt types:
+
+1. **Individual analysis** (`buildStreamingAnalysisPrompt`): Includes streaming context at the top
+2. **Collaboration** (`buildCollaborationPrompt`): Responds to other agents' questions
+
+Always include:
+- Risk score format: `RISK_SCORE: [0.0-1.0]`
+- Reasoning format: `REASONING: [explanation]`
+- Recommendation format: `RECOMMENDATION: [action]`  
+
+Prompts are parsed by `AgenticFraudUtils` utility methods.
+
+---
+
+## Development Patterns
+
+### Adding a New Agent
+
+1. Create class extending `AbstractFraudAgent` in `agents/` package
+2. Implement:
+    - `buildAnalysisPrompt()` - Base analysis prompt
+    - `buildStreamingAnalysisPrompt()` - Streaming-enhanced prompt
+    - `initializeKnowledge()` - Agent-specific knowledge base
+    - `getSpecialization()` and `getAgentId()`
+3. Register in `AgentCoordinator` constructor
+4. Add agent weight in `getAgentWeight()` method
+5. Update agent count in parallel execution (currently 5)
+
+### Modifying Streaming Context
+
+To add new streaming intelligence:
+
+1. Update `StreamingContext` model with new fields
+2. Modify `FraudStreams.java` to calculate new context (e.g., new KTable join)
+3. Update `EnrichedTransaction.toStreamingContext()` method
+4. Update agent prompts in `buildStreamingAnalysisPrompt()` to use new context
+
+### Changing Routing Logic
+
+Intelligent routing is in `FraudStreams.java` around line 170:
+
+```java
+.split()
+.branch((key, decision) -> decision.isFraudulent() && decision.confidenceScore() > 0.8, ...)
+.branch((key, decision) -> decision.isFraudulent() || decision.requireManuelReview(), ...)
+.defaultBranch(...)
+```
+
+Adjust confidence thresholds or conditions as needed.
+
+## Option 2: Try it yourself for local development
+
+- `git clone https://github.com/siddharthaDevineni/agentic-fraud-engine`
 - `cd agentic-fraud-engine`
 
 #### 1. Start Kafka infrastructure
 
 `docker-compose up -d`
 
-#### 2. Create topics
-
+#### 2. Start Kafka
+`docker-compose up -d`  
 `./setup-topics.sh`
 
 #### 3. Configure API key in src/main/resources/application.yml
 
-`spring.ai.openai.api-key:` your-groq-api-key
+`spring.ai.openai.api-key:` your-groq-api-key or install llama locally (no api key needed)
 
 #### 4. Run application
 
@@ -629,13 +741,29 @@ mvn spring-boot:run
 
 run `TestDataGenerator.java`
 
-Choose a scenario:
+`TestDataGenerator.java` provides 5 scenarios:
 
-1. Normal transactions
-2. High velocity attack (rapid-fire) → Try this first!
-3. Unusual amount fraud
-4. Mixed scenario
-5. Continuous stream
+1. **Normal transactions** - Tests legitimate flow → `approved-transactions`
+2. **High velocity attack** (RECOMMENDED) - 15 rapid transactions → `fraud-alerts` (90%+ confidence)
+3. **Unusual amount fraud** - 5x customer average → `human-review` (70-80% confidence)
+4. **Mixed scenario** - Combination of all patterns
+5. **Continuous stream** - Ongoing simulation (80% normal, 10% velocity, 10% unusual)
+
+---
+
+## Kafka Topics
+
+**Input:**
+- `transactions` - Raw transaction events
+- `customerProfiles` - Customer baseline data (KTable)
+
+**Output (intelligent routing):**
+- `fraud-alerts` - High confidence fraud (auto-block)
+- `human-review` - Uncertain cases (manual review)
+- `approved-transactions` - Legitimate transactions
+
+**Feedback:**
+- `analyst-feedback` - Human feedback for learning loop
 
 ---
 

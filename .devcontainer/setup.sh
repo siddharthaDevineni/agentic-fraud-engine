@@ -16,6 +16,10 @@ sudo curl -SL https://github.com/docker/compose/releases/download/v2.24.0/docker
   -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
+# Install Ollama
+echo "Installing Ollama (local LLM runtime)..."
+curl -fsSL https://ollama.com/install.sh | sh
+
 # Verify installations
 echo ""
 echo "Java version:"
@@ -33,6 +37,10 @@ echo ""
 echo "Docker Compose version:"
 docker-compose --version
 
+echo ""
+echo "Ollama version:"
+ollama --version
+
 # Download Maven dependencies
 echo ""
 echo "Downloading dependencies..."
@@ -43,5 +51,5 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Initial setup complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Next steps will run automatically..."
+echo "Next: Ollama and Kafka will start automatically.."
 echo ""

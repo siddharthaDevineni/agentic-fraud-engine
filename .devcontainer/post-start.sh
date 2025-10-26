@@ -3,9 +3,37 @@ set -e
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "STARTING KAFKA INFRASTRUCTURE"
+echo "STARTING INFRASTRUCTURE"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+# Start Ollama in background
+echo "Starting Ollama (Local LLM)..."
+ollama serve > /dev/null 2>&1 &
+OLLAMA_PID=$!
+
+# Wait for Ollama to be ready
+echo "Waiting for Ollama to be ready..."
+sleep 5
+
+# Check if llama3.1 is already downloaded
+if ollama list | grep -q "llama3.1:8b"; then
+  echo "Llama 3.1 8B already downloaded"
+else
+  echo "Downloading Llama 3.1 8B model (4.7 GB)..."
+  echo "    This takes 2-3 minutes on first run..."
+  echo "   (Subsequent starts will be instant!)"
+  echo ""
+  ollama pull llama3.1:8b
+  echo ""
+  echo "Llama 3.1 8B model ready!"
+fi
+
+# Set environment to use Codespaces profile
+export SPRING_PROFILES_ACTIVE=codespaces
+
+# Persist profile setting for this session
+echo "export SPRING_PROFILES_ACTIVE=codespaces" >> ~/.bashrc
 
 # Check if docker is available
 if ! docker info > /dev/null 2>&1; then
@@ -79,23 +107,21 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "INFRASTRUCTURE READY!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "NEXT STEPS:"
-echo ""
-echo "1️  Set your Groq API key (required):"
-echo "    export GROQ_API_KEY='gsk_your_key_here'"
-echo "    Get key: https://console.groq.com/keys (you can get free key but it wouldn't have sufficient tokens)"
+echo "1 LOCAL AI: Llama 3.1 8B running (no API key needed!)"
 echo ""
 echo "2️  Start the Spring Boot application:"
-echo "    mvn spring-boot:run"
+echo "   mvn spring-boot:run"
 echo ""
 echo "3️  In a NEW terminal, run test scenarios:"
-echo "    mvn test-compile exec:java \\"
+echo "   mvn test-compile exec:java \\"
 echo "      -Dexec.mainClass=\"com.agenticfraud.engine.testing.TestDataGenerator\""
+echo ""
+echo "or just run the TestDataGenerator class"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " USEFUL LINKS:"
 echo ""
 echo "   Kafka UI:     http://localhost:8090"
+echo "   Ollama API:   http://localhost:11434"
 echo "   Spring Boot:  http://localhost:8080"
-echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
