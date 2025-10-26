@@ -786,10 +786,13 @@ run `TestDataGenerator.java`
 - Deploy to Kubernetes with Strimzi
 - A/B testing framework for agent improvements
 
+---
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.  
 Copyright (c) 2025 Siddhartha Devineni
+
 ---
 
 **Built with ❤️ for the Kafka + AI community**
