@@ -6,6 +6,8 @@
 /home/sidna/projects/agentic-fraud-detection-ai-kafka/src/main/java/com/agenticfraud/engine/agents/PatternDetector.java
 /home/sidna/projects/agentic-fraud-detection-ai-kafka/src/main/java/com/agenticfraud/engine/agents/RiskAssessor.java
 /home/sidna/projects/agentic-fraud-detection-ai-kafka/src/main/java/com/agenticfraud/engine/agents/TemporalAnalyst.java
+/home/sidna/projects/agentic-fraud-detection-ai-kafka/src/main/java/com/agenticfraud/engine/config/ChatModelConfig.java
+/home/sidna/projects/agentic-fraud-detection-ai-kafka/src/main/java/com/agenticfraud/engine/config/StartupBanner.java
 /home/sidna/projects/agentic-fraud-detection-ai-kafka/src/main/java/com/agenticfraud/engine/controllers/ConversationalController.java
 /home/sidna/projects/agentic-fraud-detection-ai-kafka/src/main/java/com/agenticfraud/engine/controllers/FraudDetectionController.java
 /home/sidna/projects/agentic-fraud-detection-ai-kafka/src/main/java/com/agenticfraud/engine/models/AgentInsight.java

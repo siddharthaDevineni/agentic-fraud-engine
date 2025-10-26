@@ -788,6 +788,10 @@ run `TestDataGenerator.java`
 
 ## License
 
-MIT License - feel free to use this for learning!
+MIT License - see [LICENSE](LICENSE) file for details.  
+Copyright (c) 2025 Siddhartha Devineni
+---
 
-Built with ❤️ for the Kafka + AI community
+**Built with ❤️ for the Kafka + AI community**
+
+Feel free to use this project for learning! If it helps you, give it a ⭐

@@ -5,7 +5,7 @@ spring:
   application:
     name: agentic-fraud-engine
 
-  # Spring AI Configuration
+  # Spring AI Configuration: OpenAI/Groq configuration (for default profile)
   ai:
     openai:
       api-key: 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
