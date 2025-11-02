@@ -812,9 +812,7 @@ run `TestDataGenerator.java`
 
 **Technical articles explaining the architecture:**
 
-- *
-  *[How Kafka Streams Make AI Agents Smarter](https://dev.to/siddhartha_devineni_896e9/kafka-streams-make-ai-agents-fraud-detection-smarter-24c1)
-  ** (Dev.to) - Technical deep dive into stream enrichment for AI
+- **[How Kafka Streams Make AI Agents Smarter](https://dev.to/siddhartha_devineni_896e9/kafka-streams-make-ai-agents-fraud-detection-smarter-24c1)** (Dev.to) - Technical deep dive into stream enrichment for AI
 - **[I Built an AI Fraud Detection System](https://medium.com/@siddhartha.devineni/55fce4d6be3a)** (Medium) - Complete
   story and architectural decisions
 
