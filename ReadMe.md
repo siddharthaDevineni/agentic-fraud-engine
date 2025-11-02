@@ -2,9 +2,12 @@ Agentic Fraud Engine
 
 > **Intelligent Fraud Detection where AI Agents get Smarter with Kafka Streaming Context**
 
-This is an **Agentic Fraud Detection Engine** that combines multi-agent AI with Kafka Streams real-time intelligence. The system uses 5 specialized AI agents working in parallel to detect fraud patterns enhanced by streaming context (velocity, customer profiles, location data).
+This is an **Agentic Fraud Detection Engine** that combines multi-agent AI with Kafka Streams real-time intelligence.
+The system uses 5 specialized AI agents working in parallel to detect fraud patterns enhanced by streaming context (
+velocity, customer profiles, location data).
 
-**Key Innovation**: Kafka streams enrich AI agents with real-time context before analysis, making decisions smarter than traditional isolated transaction analysis.
+**Key Innovation**: Kafka streams enrich AI agents with real-time context before analysis, making decisions smarter than
+traditional isolated transaction analysis.
 Fraud detection system combining:
 
 - **Multi-Agent AI** - 5 specialized fraud detection agents collaboration
@@ -13,12 +16,13 @@ Fraud detection system combining:
 - **Learning Loops** - Continuous improvement from analyst feedback
 
 ---
+
 ## See It In Action
 
 Watch 5 AI agents detect a high-velocity attack in real-time with Kafka streaming context.
 
 ![Demo video](docs/demo_video_with_captions-gif.gif)
->Shows: Kafka streams processing → AI agents analyzing → Fraud detection (90% confidence)
+> Shows: Kafka streams processing → AI agents analyzing → Fraud detection (90% confidence)
 
 Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
 ---
@@ -29,6 +33,7 @@ Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
   * [See It In Action](#see-it-in-action)
   * [Watch the full video on YouTube here](#watch-the-full-video-on-youtube-here)
   * [Option 1: Github Codespaces for Quick Demo](#option-1-github-codespaces-for-quick-demo)
+  * [Read the Full Story](#read-the-full-story)
   * [The Problem](#the-problem)
   * [The Solution: Streaming-Intelligent AI](#the-solution-streaming-intelligent-ai)
     * [Architecture Overview](#architecture-overview)
@@ -79,7 +84,9 @@ Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
   * [Kafka Topics](#kafka-topics)
   * [Tech Stack](#tech-stack)
   * [Future Enhancements](#future-enhancements)
+  * [Learn More](#learn-more)
   * [License](#license)
+  * [Connect](#connect)
 <!-- TOC -->
 
 </Details>
@@ -106,7 +113,11 @@ Watch the full video on YouTube [here](https://youtu.be/Dvk_1A1wasQ)
 **Detailed instructions:** See [CODESPACES.md](.devcontainer/CODESPACES.md)
 
 ---
-[![Read full story on Medium](https://img.shields.io/badge/📖_Read_on-Medium-black?style=flat&logo=medium)](https://medium.com/@siddhartha.devineni/kafka-streams-make-ai-agents-fraud-detection-smarter-55fce4d6be3a)
+
+## Read the Full Story
+
+[![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@siddhartha.devineni/kafka-streams-make-ai-agents-fraud-detection-smarter-55fce4d6be3a)  
+[![Dev.to](https://img.shields.io/badge/dev.to-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/siddhartha_devineni_896e9/kafka-streams-make-ai-agents-fraud-detection-smarter-24c1)
 
 ---
 
@@ -147,6 +158,7 @@ This system combines **Kafka Streams real-time context** with **Multi-Agent AI**
 ---
 
 ### How It Works:
+
 Three-Layer Processing Pipeline:
 
 #### 1. Streaming Enrichment Layer (`FraudStreams.java`)
@@ -178,6 +190,7 @@ High velocity threshold: 3+ transactions in 5 minutes (triggers collaboration in
 State Store: KTable maintains current velocity per customer
 
 #### 2️. Multi-Agent AI Layer (`AgentCoordinator.java` + 5 agents)
+
 - **Phase 1**: Parallel streaming-enhanced analysis by all 5 agents
 - **Phase 2**: Agent collaboration when high disagreement or high velocity detected
 - **Phase 3**: Final decision synthesis with streaming intelligence bonus
@@ -224,6 +237,7 @@ public void updateKnowledge(String transactionId, boolean actualFraud, String fe
 // Future: Retrain models with feedback
 }
 ````
+
 #### Key Data Models
 
 - `Transaction` - Base transaction record
@@ -673,9 +687,10 @@ Each agent has two prompt types:
 2. **Collaboration** (`buildCollaborationPrompt`): Responds to other agents' questions
 
 Always include:
+
 - Risk score format: `RISK_SCORE: [0.0-1.0]`
 - Reasoning format: `REASONING: [explanation]`
-- Recommendation format: `RECOMMENDATION: [action]`  
+- Recommendation format: `RECOMMENDATION: [action]`
 
 Prompts are parsed by `AgenticFraudUtils` utility methods.
 
@@ -727,6 +742,7 @@ Adjust confidence thresholds or conditions as needed.
 `docker-compose up -d`
 
 #### 2. Start Kafka
+
 `docker-compose up -d`  
 `./setup-topics.sh`
 
@@ -755,15 +771,18 @@ run `TestDataGenerator.java`
 ## Kafka Topics
 
 **Input:**
+
 - `transactions` - Raw transaction events
 - `customerProfiles` - Customer baseline data (KTable)
 
 **Output (intelligent routing):**
+
 - `fraud-alerts` - High confidence fraud (auto-block)
 - `human-review` - Uncertain cases (manual review)
 - `approved-transactions` - Legitimate transactions
 
 **Feedback:**
+
 - `analyst-feedback` - Human feedback for learning loop
 
 ---
@@ -789,6 +808,18 @@ run `TestDataGenerator.java`
 
 ---
 
+## Learn More
+
+**Technical articles explaining the architecture:**
+
+- *
+  *[How Kafka Streams Make AI Agents Smarter](https://dev.to/siddhartha_devineni_896e9/kafka-streams-make-ai-agents-fraud-detection-smarter-24c1)
+  ** (Dev.to) - Technical deep dive into stream enrichment for AI
+- **[I Built an AI Fraud Detection System](https://medium.com/@siddhartha.devineni/55fce4d6be3a)** (Medium) - Complete
+  story and architectural decisions
+
+---
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.  
@@ -799,3 +830,9 @@ Copyright (c) 2025 Siddhartha Devineni
 **Built with ❤️ for the Kafka + AI community**
 
 Feel free to use this project for learning! If it helps you, give it a ⭐
+
+---
+
+## Connect
+
+- [LinkedIn](https://www.linkedin.com/in/siddhartha-devineni/)
